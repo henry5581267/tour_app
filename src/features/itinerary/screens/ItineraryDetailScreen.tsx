@@ -41,7 +41,7 @@ export function ItineraryDetailScreen({ route, navigation }: Props) {
       setTravelTimes(result)
     }
     fetchAll()
-  }, [trip?.id])
+  }, [JSON.stringify(trip?.tripDays)])
 
   React.useLayoutEffect(() => {
     if (trip) navigation.setOptions({ title: trip.name })

@@ -23,9 +23,9 @@ describe('sortByDistance', () => {
   })
 
   it('sorts by nearest neighbor starting from first place', () => {
-    const origin = place('a', 0, 0)
-    const near   = place('b', 1, 0)
-    const far    = place('c', 10, 0)
+    const origin = place('a', 25.0, 121.0)  // valid coords
+    const near   = place('b', 25.1, 121.0)
+    const far    = place('c', 26.0, 121.0)
     const result = sortByDistance([origin, far, near])
     expect(result.map(p => p.id)).toEqual(['a', 'b', 'c'])
   })

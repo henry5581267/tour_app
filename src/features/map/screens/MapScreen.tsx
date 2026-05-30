@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, SafeAreaView } from 'react-native'
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps'
 import { useItineraryStore } from '../../itinerary/store'
@@ -8,10 +8,14 @@ const DAY_COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4
 
 export function MapScreen() {
   const trips = useItineraryStore(s => s.trips)
-  const [selectedTripId, setSelectedTripId] = useState<string | null>(
-    trips[0]?.id ?? null
-  )
+  const [selectedTripId, setSelectedTripId] = useState<string | null>(null)
   const [selectedDay, setSelectedDay] = useState(0)
+
+  useEffect(() => {
+    if (!selectedTripId && trips.length > 0) {
+      setSelectedTripId(trips[0].id)
+    }
+  }, [trips])
 
   const trip = trips.find(t => t.id === selectedTripId)
   const day = trip?.tripDays[selectedDay]

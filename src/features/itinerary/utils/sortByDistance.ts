@@ -19,15 +19,13 @@ function isValidCoord(p: TripPlace): boolean {
 export function sortByDistance(places: TripPlace[]): TripPlace[] {
   if (places.length <= 1) return [...places]
 
-  // Always anchor on the first place in the input regardless of its coords
-  const anchor = places[0]
-  const rest = places.slice(1)
+  const valid = places.filter(isValidCoord)
+  const invalid = places.filter(p => !isValidCoord(p))
 
-  const validRest = rest.filter(isValidCoord)
-  const invalidRest = rest.filter(p => !isValidCoord(p))
+  if (valid.length === 0) return [...places]
 
-  const result: TripPlace[] = [anchor]
-  const remaining = validRest.slice()
+  const result: TripPlace[] = [valid[0]]
+  const remaining = valid.slice(1)
 
   while (remaining.length > 0) {
     const last = result[result.length - 1]
@@ -40,5 +38,5 @@ export function sortByDistance(places: TripPlace[]): TripPlace[] {
     result.push(remaining.splice(nearestIdx, 1)[0])
   }
 
-  return [...result, ...invalidRest]
+  return [...result, ...invalid]
 }

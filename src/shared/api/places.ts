@@ -12,7 +12,8 @@ function photoUrl(ref: string): string {
   return `${PLACES_BASE_URL}/photo?maxwidth=800&photo_reference=${ref}&key=${GOOGLE_PLACES_API_KEY}`
 }
 
-function mapResult(item: any, category: PlaceCategory): PlaceSearchResult {
+function mapResult(item: any, category: PlaceCategory): PlaceSearchResult | null {
+  if (!item.geometry?.location) return null
   return {
     googlePlaceId: item.place_id,
     name: item.name,
@@ -43,9 +44,9 @@ export async function searchPlaces(
   if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
     throw new Error(`Places API: ${data.status}`)
   }
-  const results: PlaceSearchResult[] = (data.results ?? []).map((r: any) =>
-    mapResult(r, category)
-  )
+  const results: PlaceSearchResult[] = (data.results ?? [])
+    .map((r: any) => mapResult(r, category))
+    .filter((r): r is PlaceSearchResult => r !== null)
   await setCache(cacheKey, results)
   return results
 }
