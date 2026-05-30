@@ -1,0 +1,4 @@
+module.exports = {
+  GOOGLE_PLACES_API_KEY: 'TEST_KEY',
+  GOOGLE_DIRECTIONS_API_KEY: 'TEST_KEY',
+}
