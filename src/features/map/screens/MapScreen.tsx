@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react'
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, SafeAreaView } from 'react-native'
+﻿import React, { useState, useEffect } from 'react'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native'
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps'
 import { useItineraryStore } from '../../itinerary/store'
 import { TripPlace } from '../../../shared/types'
@@ -99,3 +100,5 @@ const styles = StyleSheet.create({
   dayTab: { paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 2, borderBottomColor: 'transparent' },
   dayTabText: { fontSize: 13, fontWeight: '700' },
 })
+
+

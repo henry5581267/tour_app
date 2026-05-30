@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import { ScrollView, SafeAreaView, StyleSheet, TouchableOpacity, Text } from 'react-native'
+﻿import React, { useEffect, useState } from 'react'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { ScrollView, StyleSheet, TouchableOpacity, Text } from 'react-native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { RootStackParamList, TripPlace } from '../../../shared/types'
 import { useItineraryStore } from '../store'
@@ -99,3 +100,5 @@ const styles = StyleSheet.create({
   },
   fabText: { color: '#fff', fontSize: 28, lineHeight: 32 },
 })
+
+

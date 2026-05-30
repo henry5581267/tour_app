@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
-import { FlatList, SafeAreaView, StyleSheet } from 'react-native'
+﻿import React, { useState } from 'react'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { FlatList, StyleSheet } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { PlaceCategory, PlaceSearchResult, RootStackParamList } from '../../../shared/types'
@@ -73,3 +74,5 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   list: { paddingBottom: 16 },
 })
+
+

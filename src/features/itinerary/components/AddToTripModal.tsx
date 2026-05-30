@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+﻿import React, { useState } from 'react'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import {
   Modal, View, Text, TouchableOpacity, FlatList,
-  StyleSheet, SafeAreaView, Image, ScrollView
+  StyleSheet, Image, ScrollView
 } from 'react-native'
 import { Trip, TripPlace } from '../../../shared/types'
 import { useItineraryStore } from '../store'
@@ -228,3 +229,5 @@ const styles = StyleSheet.create({
   addBtn: { borderRadius: 14, paddingHorizontal: 28, paddingVertical: 14 },
   addText: { color: '#fff', fontWeight: '700', fontSize: 16 },
 })
+
+

@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
-import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native'
+﻿import React, { useState } from 'react'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native'
 import { PlaceCategory, TripPlace } from '../../../shared/types'
 import { useTheme } from '../../../shared/theme/ThemeContext'
 
@@ -102,3 +103,5 @@ const styles = StyleSheet.create({
   addBtn: { borderRadius: 10, paddingHorizontal: 20, paddingVertical: 12 },
   addText: { fontWeight: '700', fontSize: 14 },
 })
+
+

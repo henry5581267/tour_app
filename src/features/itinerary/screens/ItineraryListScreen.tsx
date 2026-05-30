@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+﻿import React, { useState } from 'react'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import {
-  FlatList, SafeAreaView, Text, TouchableOpacity, View,
+  FlatList, Text, TouchableOpacity, View,
   StyleSheet, Alert, Modal, TextInput
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
@@ -149,3 +150,5 @@ const styles = StyleSheet.create({
   renameConfirmBtn: { borderRadius: 10, paddingHorizontal: 24, paddingVertical: 10 },
   renameConfirmText: { fontWeight: '700', fontSize: 15 },
 })
+
+

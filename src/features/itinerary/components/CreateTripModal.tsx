@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
-import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native'
+﻿import React, { useState } from 'react'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
 import { useTheme } from '../../../shared/theme/ThemeContext'
 
 interface Props {
@@ -73,3 +74,5 @@ const styles = StyleSheet.create({
   createBtn: { borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12 },
   createText: { fontWeight: '700', fontSize: 15 },
 })
+
+

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { ThemeProvider } from './src/shared/theme/ThemeContext'
 import { AppNavigator } from './src/navigation/AppNavigator'
 import { useItineraryStore } from './src/features/itinerary/store'
@@ -11,8 +12,10 @@ function Root() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <Root />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <Root />
+      </ThemeProvider>
+    </SafeAreaProvider>
   )
 }
