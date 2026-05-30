@@ -1,6 +1,5 @@
 import React from 'react'
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
-import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist'
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native'
 import { TripDay, TripPlace } from '../../../shared/types'
 import { CategoryBadge } from '../../../shared/components/CategoryBadge'
 import { confirmDelete } from '../../../shared/components/ConfirmDialog'
@@ -15,32 +14,18 @@ interface Props {
 }
 
 export function DaySection({ day, travelTimes, onReorder, onDelete, onAutoSort, onAddManual }: Props) {
-  const renderItem = ({ item, drag, isActive, getIndex }: RenderItemParams<TripPlace>) => {
-    const idx = getIndex() ?? 0
-    const travelTime = travelTimes[idx]
-    return (
-      <View>
-        <TouchableOpacity
-          style={[styles.placeRow, isActive && styles.placeRowActive]}
-          onLongPress={drag}
-          onPress={() =>
-            confirmDelete('移除地點', `確定移除「${item.name}」？`, () => onDelete(item.id))
-          }
-        >
-          <View style={styles.placeLeft}>
-            <CategoryBadge category={item.category} />
-            <Text style={styles.placeName}>{item.name}</Text>
-            <Text style={styles.placeAddr} numberOfLines={1}>{item.address}</Text>
-          </View>
-          <Text style={styles.dragHandle}>⠿</Text>
-        </TouchableOpacity>
-        {travelTime ? (
-          <View style={styles.travelRow}>
-            <Text style={styles.travelText}>🚶 {travelTime}</Text>
-          </View>
-        ) : null}
-      </View>
-    )
+  const moveUp = (idx: number) => {
+    if (idx === 0) return
+    const newOrder = [...day.places]
+    ;[newOrder[idx - 1], newOrder[idx]] = [newOrder[idx], newOrder[idx - 1]]
+    onReorder(newOrder)
+  }
+
+  const moveDown = (idx: number) => {
+    if (idx === day.places.length - 1) return
+    const newOrder = [...day.places]
+    ;[newOrder[idx], newOrder[idx + 1]] = [newOrder[idx + 1], newOrder[idx]]
+    onReorder(newOrder)
   }
 
   return (
@@ -58,16 +43,48 @@ export function DaySection({ day, travelTimes, onReorder, onDelete, onAutoSort, 
           </TouchableOpacity>
         </View>
       </View>
+
       {day.places.length === 0 ? (
         <Text style={styles.empty}>尚未加入地點</Text>
       ) : (
-        <DraggableFlatList
-          data={day.places}
-          keyExtractor={p => p.id}
-          renderItem={renderItem}
-          onDragEnd={({ data }) => onReorder(data)}
-          scrollEnabled={false}
-        />
+        day.places.map((place, idx) => (
+          <View key={place.id}>
+            <View style={styles.placeRow}>
+              <View style={styles.orderBtns}>
+                <TouchableOpacity
+                  style={[styles.orderBtn, idx === 0 && styles.orderBtnDisabled]}
+                  onPress={() => moveUp(idx)}
+                  disabled={idx === 0}
+                >
+                  <Text style={styles.orderBtnText}>▲</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.orderBtn, idx === day.places.length - 1 && styles.orderBtnDisabled]}
+                  onPress={() => moveDown(idx)}
+                  disabled={idx === day.places.length - 1}
+                >
+                  <Text style={styles.orderBtnText}>▼</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.placeInfo}>
+                <CategoryBadge category={place.category} />
+                <Text style={styles.placeName}>{place.name}</Text>
+                <Text style={styles.placeAddr} numberOfLines={1}>{place.address}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.deleteBtn}
+                onPress={() => confirmDelete('移除地點', `確定移除「${place.name}」？`, () => onDelete(place.id))}
+              >
+                <Text style={styles.deleteBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            {travelTimes[idx] ? (
+              <View style={styles.travelRow}>
+                <Text style={styles.travelText}>🚶 {travelTimes[idx]}</Text>
+              </View>
+            ) : null}
+          </View>
+        ))
       )}
     </View>
   )
@@ -88,15 +105,25 @@ const styles = StyleSheet.create({
   empty: { paddingHorizontal: 16, color: '#aaa', fontSize: 13, paddingBottom: 8 },
   placeRow: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff',
-    marginHorizontal: 16, marginBottom: 0, borderRadius: 12, padding: 12,
+    marginHorizontal: 16, marginBottom: 6, borderRadius: 12, padding: 12,
     elevation: 1, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4,
     shadowOffset: { width: 0, height: 1 },
   },
-  placeRowActive: { backgroundColor: '#eff6ff', elevation: 6 },
-  placeLeft: { flex: 1 },
+  orderBtns: { flexDirection: 'column', marginRight: 10, gap: 2 },
+  orderBtn: {
+    width: 28, height: 28, borderRadius: 6, backgroundColor: '#f1f5f9',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  orderBtnDisabled: { opacity: 0.3 },
+  orderBtnText: { fontSize: 12, color: '#555' },
+  placeInfo: { flex: 1 },
   placeName: { fontSize: 14, fontWeight: '700', color: '#1a1a1a', marginTop: 4 },
   placeAddr: { fontSize: 12, color: '#888', marginTop: 2 },
-  dragHandle: { fontSize: 22, color: '#ccc', paddingLeft: 8 },
+  deleteBtn: {
+    width: 32, height: 32, borderRadius: 16, backgroundColor: '#fef2f2',
+    justifyContent: 'center', alignItems: 'center', marginLeft: 8,
+  },
+  deleteBtnText: { fontSize: 14, color: '#ef4444', fontWeight: '700' },
   travelRow: { alignItems: 'center', paddingVertical: 4, marginHorizontal: 32 },
   travelText: { fontSize: 11, color: '#94a3b8' },
 })

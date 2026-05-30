@@ -8,14 +8,14 @@ import { PlaceCard } from '../../../shared/components/PlaceCard'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
 import { EmptyState } from '../../../shared/components/EmptyState'
 import { SearchBar } from '../components/SearchBar'
-import { CategoryTabs } from '../components/CategoryTabs'
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Tabs'>
+
+const ALL_CATEGORIES: PlaceCategory[] = ['attraction', 'restaurant', 'activity']
 
 export function PlacesScreen() {
   const navigation = useNavigation<Nav>()
   const [query, setQuery] = useState('')
-  const [category, setCategory] = useState<PlaceCategory>('attraction')
   const [results, setResults] = useState<PlaceSearchResult[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -25,8 +25,14 @@ export function PlacesScreen() {
     setLoading(true)
     setError(null)
     try {
-      const data = await searchPlaces(query.trim(), category)
-      setResults(data)
+      const allResults = await Promise.allSettled(
+        ALL_CATEGORIES.map(cat => searchPlaces(query.trim(), cat))
+      )
+      const combined: PlaceSearchResult[] = allResults.flatMap(r =>
+        r.status === 'fulfilled' ? r.value : []
+      )
+      combined.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
+      setResults(combined)
     } catch {
       setError('搜尋失敗，請檢查網路連線')
       setResults([])
@@ -35,15 +41,9 @@ export function PlacesScreen() {
     }
   }
 
-  const handleCategoryChange = (cat: PlaceCategory) => {
-    setCategory(cat)
-    setResults([])
-  }
-
   return (
     <SafeAreaView style={styles.container}>
       <SearchBar value={query} onChangeText={setQuery} onSubmit={handleSearch} />
-      <CategoryTabs active={category} onChange={handleCategoryChange} />
       {loading ? (
         <LoadingSpinner />
       ) : error ? (
@@ -53,7 +53,7 @@ export function PlacesScreen() {
       ) : (
         <FlatList
           data={results}
-          keyExtractor={item => item.googlePlaceId}
+          keyExtractor={item => `${item.googlePlaceId}-${item.category}`}
           renderItem={({ item }) => (
             <PlaceCard
               place={item}
