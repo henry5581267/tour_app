@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
-import {
-  Modal, View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView
-} from 'react-native'
+import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native'
+import { useTheme } from '../../../shared/theme/ThemeContext'
 
 interface Props {
   visible: boolean
@@ -10,6 +9,7 @@ interface Props {
 }
 
 export function CreateTripModal({ visible, onClose, onCreate }: Props) {
+  const { colors } = useTheme()
   const [name, setName] = useState('')
   const [days, setDays] = useState('3')
 
@@ -24,35 +24,35 @@ export function CreateTripModal({ visible, onClose, onCreate }: Props) {
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose} transparent>
       <View style={styles.overlay}>
-        <SafeAreaView style={styles.sheet}>
-          <Text style={styles.title}>建立新行程</Text>
-          <Text style={styles.label}>行程名稱</Text>
+        <SafeAreaView style={[styles.sheet, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.title, { color: colors.text }]}>建立新行程</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>行程名稱</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surfaceSecondary }]}
             value={name}
             onChangeText={setName}
             placeholder="例如：東京五日遊"
-            placeholderTextColor="#aaa"
+            placeholderTextColor={colors.textTertiary}
           />
-          <Text style={styles.label}>天數</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>天數</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surfaceSecondary }]}
             value={days}
             onChangeText={setDays}
             keyboardType="number-pad"
             placeholder="3"
-            placeholderTextColor="#aaa"
+            placeholderTextColor={colors.textTertiary}
           />
           <View style={styles.footer}>
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text style={styles.cancelText}>取消</Text>
+              <Text style={[styles.cancelText, { color: colors.textSecondary }]}>取消</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.createBtn, !name.trim() && styles.createBtnDisabled]}
+              style={[styles.createBtn, { backgroundColor: name.trim() ? colors.primary : colors.surfaceSecondary }]}
               onPress={handleCreate}
               disabled={!name.trim()}
             >
-              <Text style={styles.createText}>建立</Text>
+              <Text style={[styles.createText, { color: name.trim() ? '#fff' : colors.textTertiary }]}>建立</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -62,18 +62,14 @@ export function CreateTripModal({ visible, onClose, onCreate }: Props) {
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
+  sheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
   title: { fontSize: 20, fontWeight: '700', marginBottom: 20 },
-  label: { fontSize: 13, fontWeight: '600', color: '#555', marginBottom: 6 },
-  input: {
-    borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: 10,
-    padding: 12, fontSize: 15, color: '#1a1a1a', marginBottom: 16,
-  },
+  label: { fontSize: 13, fontWeight: '600', marginBottom: 6 },
+  input: { borderWidth: 1.5, borderRadius: 10, padding: 12, fontSize: 15, marginBottom: 16 },
   footer: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12 },
   cancelBtn: { padding: 12 },
-  cancelText: { color: '#888', fontSize: 15 },
-  createBtn: { backgroundColor: '#3b82f6', borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12 },
-  createBtnDisabled: { backgroundColor: '#93c5fd' },
-  createText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  cancelText: { fontSize: 15 },
+  createBtn: { borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12 },
+  createText: { fontWeight: '700', fontSize: 15 },
 })

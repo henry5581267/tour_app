@@ -7,6 +7,7 @@ import { DaySection } from '../components/DaySection'
 import { EmptyState } from '../../../shared/components/EmptyState'
 import { getTravelTime } from '../../../shared/api/directions'
 import { ManualPlaceModal } from '../components/ManualPlaceModal'
+import { useTheme } from '../../../shared/theme/ThemeContext'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ItineraryDetail'>
 
@@ -14,7 +15,9 @@ type TravelTimes = Record<number, Record<number, string>>
 
 export function ItineraryDetailScreen({ route, navigation }: Props) {
   const { tripId } = route.params
+  const { colors } = useTheme()
   const trips = useItineraryStore(s => s.trips)
+  const sortingDayKey = useItineraryStore(s => s.sortingDayKey)
   const reorderDay = useItineraryStore(s => s.reorderDay)
   const removePlaceFromTrip = useItineraryStore(s => s.removePlaceFromTrip)
   const autoSortDay = useItineraryStore(s => s.autoSortDay)
@@ -50,7 +53,7 @@ export function ItineraryDetailScreen({ route, navigation }: Props) {
   if (!trip) return <EmptyState message="找不到行程" />
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
         {trip.tripDays.map(day => (
           <DaySection
@@ -59,6 +62,7 @@ export function ItineraryDetailScreen({ route, navigation }: Props) {
             travelTimes={travelTimes[day.dayIndex] ?? {}}
             onReorder={newOrder => reorderDay(tripId, day.dayIndex, newOrder)}
             onDelete={placeId => removePlaceFromTrip(tripId, day.dayIndex, placeId)}
+            isSorting={sortingDayKey === `${tripId}-${day.dayIndex}`}
             onAutoSort={() => autoSortDay(tripId, day.dayIndex)}
             onAddManual={() => { setManualDay(day.dayIndex); setShowManual(true) }}
           />
@@ -84,7 +88,7 @@ export function ItineraryDetailScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1 },
   content: { paddingVertical: 8 },
   fab: {
     position: 'absolute', right: 24, bottom: 24,

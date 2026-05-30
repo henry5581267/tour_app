@@ -1,22 +1,40 @@
 import React from 'react'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-import { Text } from 'react-native'
+import { Text, TouchableOpacity } from 'react-native'
 import { TabParamList } from '../shared/types'
 import { PlacesScreen } from '../features/places/screens/PlacesScreen'
 import { ItineraryListScreen } from '../features/itinerary/screens/ItineraryListScreen'
 import { MapScreen } from '../features/map/screens/MapScreen'
+import { useTheme } from '../shared/theme/ThemeContext'
 
 const Tab = createBottomTabNavigator<TabParamList>()
 
 const icon = (label: string) => () => <Text style={{ fontSize: 20 }}>{label}</Text>
 
 export function TabNavigator() {
+  const { colors, isDark, toggleTheme } = useTheme()
+
+  const themeBtn = () => (
+    <TouchableOpacity onPress={toggleTheme} style={{ marginRight: 16 }}>
+      <Text style={{ fontSize: 22 }}>{isDark ? '☀️' : '🌙'}</Text>
+    </TouchableOpacity>
+  )
+
   return (
     <Tab.Navigator
       screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: '#3b82f6',
-        tabBarStyle: { paddingBottom: 8, height: 60 },
+        headerShown: true,
+        headerStyle: { backgroundColor: colors.surface },
+        headerTintColor: colors.text,
+        headerRight: themeBtn,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarStyle: {
+          backgroundColor: colors.tabBar,
+          borderTopColor: colors.border,
+          paddingBottom: 8,
+          height: 60,
+        },
       }}
     >
       <Tab.Screen name="Places" component={PlacesScreen}

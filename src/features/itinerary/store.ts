@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { Trip, TripPlace } from '../../shared/types'
 import { getTrips, addTrip, updateTrip, deleteTrip } from '../../shared/storage/tripsStorage'
-import { sortByDistance } from './utils/sortByDistance'
+import { sortByRoute } from './utils/sortByRoute'
 
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2)
@@ -9,6 +9,7 @@ function generateId(): string {
 
 interface ItineraryState {
   trips: Trip[]
+  sortingDayKey: string | null  // `${tripId}-${dayIndex}` 表示哪天正在排序
   loadTrips: () => Promise<void>
   createTrip: (name: string, days: number) => Promise<Trip>
   removeTrip: (id: string) => Promise<void>
@@ -17,10 +18,12 @@ interface ItineraryState {
   reorderDay: (tripId: string, dayIndex: number, newOrder: TripPlace[]) => Promise<void>
   movePlaceToDay: (tripId: string, placeId: string, fromDay: number, toDay: number) => Promise<void>
   autoSortDay: (tripId: string, dayIndex: number) => Promise<void>
+  renameTrip: (tripId: string, newName: string) => Promise<void>
 }
 
 export const useItineraryStore = create<ItineraryState>((set, get) => ({
   trips: [],
+  sortingDayKey: null,
 
   loadTrips: async () => {
     const trips = await getTrips()
@@ -113,8 +116,23 @@ export const useItineraryStore = create<ItineraryState>((set, get) => ({
     const trip = get().trips.find(t => t.id === tripId)
     if (!trip) return
     const day = trip.tripDays.find(d => d.dayIndex === dayIndex)
-    if (!day) return
-    const sorted = sortByDistance(day.places)
-    await get().reorderDay(tripId, dayIndex, sorted)
+    if (!day || day.places.length < 2) return
+
+    const key = `${tripId}-${dayIndex}`
+    set({ sortingDayKey: key })
+    try {
+      const sorted = await sortByRoute(day.places)
+      await get().reorderDay(tripId, dayIndex, sorted)
+    } finally {
+      set({ sortingDayKey: null })
+    }
+  },
+
+  renameTrip: async (tripId, newName) => {
+    const trip = get().trips.find(t => t.id === tripId)
+    if (!trip) return
+    const updated: Trip = { ...trip, name: newName }
+    await updateTrip(updated)
+    set(s => ({ trips: s.trips.map(t => (t.id === tripId ? updated : t)) }))
   },
 }))

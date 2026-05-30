@@ -8,6 +8,7 @@ import { PlaceCard } from '../../../shared/components/PlaceCard'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
 import { EmptyState } from '../../../shared/components/EmptyState'
 import { SearchBar } from '../components/SearchBar'
+import { useTheme } from '../../../shared/theme/ThemeContext'
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Tabs'>
 
@@ -15,6 +16,7 @@ const ALL_CATEGORIES: PlaceCategory[] = ['attraction', 'restaurant', 'activity']
 
 export function PlacesScreen() {
   const navigation = useNavigation<Nav>()
+  const { colors } = useTheme()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<PlaceSearchResult[]>([])
   const [loading, setLoading] = useState(false)
@@ -42,7 +44,7 @@ export function PlacesScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <SearchBar value={query} onChangeText={setQuery} onSubmit={handleSearch} />
       {loading ? (
         <LoadingSpinner />
@@ -68,6 +70,6 @@ export function PlacesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1 },
   list: { paddingBottom: 16 },
 })

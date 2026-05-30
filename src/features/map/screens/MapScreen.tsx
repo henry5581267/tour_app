@@ -3,10 +3,12 @@ import { View, Text, TouchableOpacity, FlatList, StyleSheet, SafeAreaView } from
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps'
 import { useItineraryStore } from '../../itinerary/store'
 import { TripPlace } from '../../../shared/types'
+import { useTheme } from '../../../shared/theme/ThemeContext'
 
 const DAY_COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
 
 export function MapScreen() {
+  const { colors } = useTheme()
   const trips = useItineraryStore(s => s.trips)
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null)
   const [selectedDay, setSelectedDay] = useState(0)
@@ -26,7 +28,7 @@ export function MapScreen() {
     : { latitude: 25.0478, longitude: 121.5318, latitudeDelta: 0.1, longitudeDelta: 0.1 }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {trips.length > 1 && (
         <FlatList
           horizontal
@@ -34,13 +36,13 @@ export function MapScreen() {
           keyExtractor={t => t.id}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={[styles.tripTab, selectedTripId === item.id && styles.tripTabActive]}
+              style={[styles.tripTab, { backgroundColor: colors.surface }, selectedTripId === item.id && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
               onPress={() => { setSelectedTripId(item.id); setSelectedDay(0) }}
             >
-              <Text style={styles.tripTabText}>{item.name}</Text>
+              <Text style={[styles.tripTabText, { color: colors.textSecondary }]}>{item.name}</Text>
             </TouchableOpacity>
           )}
-          style={styles.tripTabs}
+          style={[styles.tripTabs, { backgroundColor: colors.surface }]}
         />
       )}
       {trip && (
@@ -50,13 +52,13 @@ export function MapScreen() {
           keyExtractor={d => String(d.dayIndex)}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={[styles.dayTab, selectedDay === item.dayIndex && styles.dayTabActive]}
+              style={[styles.dayTab, { backgroundColor: colors.background }, selectedDay === item.dayIndex && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
               onPress={() => setSelectedDay(item.dayIndex)}
             >
-              <Text style={styles.dayTabText}>Day {item.dayIndex + 1}</Text>
+              <Text style={[styles.dayTabText, { color: colors.textSecondary }]}>Day {item.dayIndex + 1}</Text>
             </TouchableOpacity>
           )}
-          style={styles.dayTabs}
+          style={[styles.dayTabs, { backgroundColor: colors.background }]}
         />
       )}
       <MapView
@@ -90,12 +92,10 @@ export function MapScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
-  tripTabs: { maxHeight: 44, backgroundColor: '#fff' },
+  tripTabs: { maxHeight: 44 },
   tripTab: { paddingHorizontal: 16, paddingVertical: 10 },
-  tripTabActive: { borderBottomWidth: 2, borderBottomColor: '#3b82f6' },
-  tripTabText: { fontSize: 13, fontWeight: '600', color: '#555' },
-  dayTabs: { maxHeight: 44, backgroundColor: '#f8fafc' },
+  tripTabText: { fontSize: 13, fontWeight: '600' },
+  dayTabs: { maxHeight: 44 },
   dayTab: { paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  dayTabActive: { borderBottomColor: '#3b82f6' },
-  dayTabText: { fontSize: 13, fontWeight: '700', color: '#555' },
+  dayTabText: { fontSize: 13, fontWeight: '700' },
 })

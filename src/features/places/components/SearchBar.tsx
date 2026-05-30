@@ -1,5 +1,6 @@
 import React from 'react'
 import { View, TextInput, StyleSheet } from 'react-native'
+import { useTheme } from '../../../shared/theme/ThemeContext'
 
 interface Props {
   value: string
@@ -8,15 +9,16 @@ interface Props {
 }
 
 export function SearchBar({ value, onChangeText, onSubmit }: Props) {
+  const { colors } = useTheme()
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.surfaceSecondary }]}>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { color: colors.text }]}
         value={value}
         onChangeText={onChangeText}
         onSubmitEditing={onSubmit}
         placeholder="搜尋景點、餐廳、遊玩..."
-        placeholderTextColor="#aaa"
+        placeholderTextColor={colors.textTertiary}
         returnKeyType="search"
         autoCapitalize="none"
       />
@@ -27,9 +29,8 @@ export function SearchBar({ value, onChangeText, onSubmit }: Props) {
 const styles = StyleSheet.create({
   container: {
     margin: 16,
-    backgroundColor: '#f1f5f9',
     borderRadius: 12,
     paddingHorizontal: 16,
   },
-  input: { height: 44, fontSize: 15, color: '#1a1a1a' },
+  input: { height: 44, fontSize: 15 },
 })
