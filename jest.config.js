@@ -7,8 +7,10 @@ module.exports = {
     'react-native-maps': '<rootDir>/__mocks__/react-native-maps.js',
     'react-native-gesture-handler': '<rootDir>/__mocks__/react-native-gesture-handler.js',
     'react-native-draggable-flatlist': '<rootDir>/__mocks__/react-native-draggable-flatlist.js',
+    '@react-native-firebase/app': '<rootDir>/__mocks__/@react-native-firebase/app.js',
+    '@react-native-firebase/firestore': '<rootDir>/__mocks__/@react-native-firebase/firestore.js',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|@react-navigation|@react-native-community|zustand)/)',
+    'node_modules/(?!(react-native|@react-native|@react-navigation|@react-native-community|@react-native-firebase|zustand)/)',
   ],
 }
