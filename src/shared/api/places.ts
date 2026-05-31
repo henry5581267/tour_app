@@ -2,11 +2,6 @@ import { PlaceCategory, PlaceSearchResult } from '../types'
 import { GOOGLE_PLACES_API_KEY, PLACES_BASE_URL } from '../config'
 import { getCached, setCache } from '../storage/placesCache'
 
-const TYPE_MAP: Record<PlaceCategory, string> = {
-  attraction: 'tourist_attraction',
-  restaurant: 'restaurant',
-  activity: 'amusement_park',
-}
 
 function photoUrl(ref: string): string {
   return `${PLACES_BASE_URL}/photo?maxwidth=800&photo_reference=${ref}&key=${GOOGLE_PLACES_API_KEY}`
@@ -36,8 +31,7 @@ export async function searchPlaces(
   const cached = await getCached<PlaceSearchResult[]>(cacheKey)
   if (cached) return cached
 
-  const type = TYPE_MAP[category]
-  const url = `${PLACES_BASE_URL}/textsearch/json?query=${encodeURIComponent(query)}&type=${type}&key=${GOOGLE_PLACES_API_KEY}`
+  const url = `${PLACES_BASE_URL}/textsearch/json?query=${encodeURIComponent(query)}&language=zh-TW&key=${GOOGLE_PLACES_API_KEY}`
   const res = await fetch(url)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const data = await res.json()

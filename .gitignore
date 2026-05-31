@@ -77,6 +77,11 @@ yarn-error.log
 !.yarn/sdks
 !.yarn/versions
 
+# APK outputs
+release/
+debug/
+*.apk
+
 # Environment variables
 .env
 .env.*
