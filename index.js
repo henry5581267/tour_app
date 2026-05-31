@@ -1,9 +1,9 @@
-import './src/shared/firebase/config'
 /**
  * @format
  */
 
 import { AppRegistry } from 'react-native';
+import './src/shared/firebase/config';
 import App from './App';
 import { name as appName } from './app.json';
 
