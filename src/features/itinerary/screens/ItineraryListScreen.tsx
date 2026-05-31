@@ -1,8 +1,8 @@
-﻿import React, { useState } from 'react'
+import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import {
   FlatList, Text, TouchableOpacity, View,
-  StyleSheet, Alert, Modal, TextInput
+  StyleSheet, Alert, Modal, TextInput,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -10,6 +10,8 @@ import { RootStackParamList, Trip } from '../../../shared/types'
 import { useItineraryStore } from '../store'
 import { EmptyState } from '../../../shared/components/EmptyState'
 import { CreateTripModal } from '../components/CreateTripModal'
+import { ShareTripModal } from '../components/ShareTripModal'
+import { JoinTripModal } from '../components/JoinTripModal'
 import { useTheme } from '../../../shared/theme/ThemeContext'
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Tabs'>
@@ -21,35 +23,52 @@ export function ItineraryListScreen() {
   const createTrip = useItineraryStore(s => s.createTrip)
   const removeTrip = useItineraryStore(s => s.removeTrip)
   const renameTrip = useItineraryStore(s => s.renameTrip)
+  const shareTrip = useItineraryStore(s => s.shareTrip)
+
   const [showCreate, setShowCreate] = useState(false)
+  const [showJoin, setShowJoin] = useState(false)
   const [renameTarget, setRenameTarget] = useState<Trip | null>(null)
   const [renameText, setRenameText] = useState('')
-
-  const handleCreate = async (name: string, days: number) => {
-    await createTrip(name, days)
-    setShowCreate(false)
-  }
+  const [shareCode, setShareCode] = useState<string | null>(null)
 
   const handleLongPress = (item: Trip) => {
     Alert.alert(item.name, '', [
       {
-        text: '更名',
-        onPress: () => {
-          setRenameText(item.name)
-          setRenameTarget(item)
-        },
+        text: item.isShared ? '顯示邀請碼' : '分享行程',
+        onPress: () => handleShare(item),
       },
       {
-        text: '刪除',
+        text: '更名',
+        onPress: () => { setRenameText(item.name); setRenameTarget(item) },
+      },
+      {
+        text: item.isShared ? '離開行程' : '刪除',
         style: 'destructive',
         onPress: () =>
-          Alert.alert('刪除行程', `確定刪除「${item.name}」？`, [
-            { text: '取消', style: 'cancel' },
-            { text: '刪除', style: 'destructive', onPress: () => removeTrip(item.id) },
-          ]),
+          Alert.alert(
+            item.isShared ? '離開行程' : '刪除行程',
+            item.isShared ? `確定離開「${item.name}」？` : `確定刪除「${item.name}」？`,
+            [
+              { text: '取消', style: 'cancel' },
+              { text: item.isShared ? '離開' : '刪除', style: 'destructive', onPress: () => removeTrip(item.id) },
+            ]
+          ),
       },
       { text: '取消', style: 'cancel' },
     ])
+  }
+
+  const handleShare = async (item: Trip) => {
+    if (item.isShared) {
+      Alert.alert('已是共享行程', '此行程已在共享中，請透過「分享行程」流程取得新邀請碼')
+      return
+    }
+    try {
+      const code = await shareTrip(item.id)
+      setShareCode(code)
+    } catch {
+      Alert.alert('分享失敗', '請確認網路連線後再試')
+    }
   }
 
   const handleRename = async () => {
@@ -66,29 +85,45 @@ export function ItineraryListScreen() {
         <FlatList
           data={trips}
           keyExtractor={t => t.id}
+          contentContainerStyle={styles.list}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
               onPress={() => navigation.navigate('ItineraryDetail', { tripId: item.id })}
               onLongPress={() => handleLongPress(item)}
             >
-              <Text style={[styles.tripName, { color: colors.text }]}>{item.name}</Text>
+              <View style={styles.cardHeader}>
+                <Text style={[styles.tripName, { color: colors.text }]}>{item.name}</Text>
+                {item.isShared && (
+                  <View style={[styles.sharedBadge, { backgroundColor: colors.primary + '22' }]}>
+                    <Text style={[styles.sharedBadgeText, { color: colors.primary }]}>👥 共享</Text>
+                  </View>
+                )}
+              </View>
               <Text style={[styles.tripMeta, { color: colors.textSecondary }]}>
                 {item.days} 天 · {item.tripDays.reduce((n, d) => n + d.places.length, 0)} 個地點
               </Text>
             </TouchableOpacity>
           )}
-          contentContainerStyle={styles.list}
         />
       )}
 
-      <TouchableOpacity style={[styles.fab, { backgroundColor: colors.primary }]} onPress={() => setShowCreate(true)}>
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+      <View style={styles.fabRow}>
+        <TouchableOpacity
+          style={[styles.joinBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          onPress={() => setShowJoin(true)}
+        >
+          <Text style={[styles.joinBtnText, { color: colors.primary }]}>加入行程</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.fab, { backgroundColor: colors.primary }]} onPress={() => setShowCreate(true)}>
+          <Text style={styles.fabText}>+</Text>
+        </TouchableOpacity>
+      </View>
 
-      <CreateTripModal visible={showCreate} onClose={() => setShowCreate(false)} onCreate={handleCreate} />
+      <CreateTripModal visible={showCreate} onClose={() => setShowCreate(false)} onCreate={async (name, days) => { await createTrip(name, days); setShowCreate(false) }} />
+      <JoinTripModal visible={showJoin} onClose={() => setShowJoin(false)} />
+      <ShareTripModal visible={!!shareCode} inviteCode={shareCode ?? ''} onClose={() => setShareCode(null)} />
 
-      {/* 更名 Modal */}
       <Modal visible={!!renameTarget} transparent animationType="fade" onRequestClose={() => setRenameTarget(null)}>
         <View style={styles.renameOverlay}>
           <View style={[styles.renameSheet, { backgroundColor: colors.surface }]}>
@@ -123,21 +158,25 @@ export function ItineraryListScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  list: { padding: 16 },
+  list: { padding: 16, paddingBottom: 100 },
   card: {
-    borderRadius: 14, padding: 16, marginBottom: 12,
-    borderWidth: 1,
-    elevation: 2, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
+    borderRadius: 14, padding: 16, marginBottom: 12, borderWidth: 1,
+    elevation: 2, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 2 },
   },
-  tripName: { fontSize: 17, fontWeight: '700' },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  tripName: { fontSize: 17, fontWeight: '700', flex: 1 },
+  sharedBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+  sharedBadgeText: { fontSize: 12, fontWeight: '600' },
   tripMeta: { fontSize: 13, marginTop: 4 },
+  fabRow: { position: 'absolute', right: 24, bottom: 24, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  joinBtn: {
+    borderRadius: 24, paddingHorizontal: 16, paddingVertical: 14, borderWidth: 1,
+    elevation: 3, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 },
+  },
+  joinBtnText: { fontSize: 14, fontWeight: '700' },
   fab: {
-    position: 'absolute', right: 24, bottom: 24,
-    width: 56, height: 56, borderRadius: 28,
-    justifyContent: 'center', alignItems: 'center',
-    elevation: 6, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
+    width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center',
+    elevation: 6, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 },
   },
   fabText: { color: '#fff', fontSize: 28, lineHeight: 32 },
   renameOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 32 },
@@ -150,5 +189,3 @@ const styles = StyleSheet.create({
   renameConfirmBtn: { borderRadius: 10, paddingHorizontal: 24, paddingVertical: 10 },
   renameConfirmText: { fontWeight: '700', fontSize: 15 },
 })
-
-
