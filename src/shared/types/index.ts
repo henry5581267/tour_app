@@ -40,10 +40,30 @@ export interface PlaceSearchResult {
   category: PlaceCategory
 }
 
+export interface GeneratedPlace {
+  name: string
+  category: PlaceCategory
+  address: string
+  time: string
+  note: string
+}
+
+export interface GeneratedDay {
+  dayIndex: number
+  theme: string
+  places: GeneratedPlace[]
+}
+
+export interface GeneratedItinerary {
+  tripName: string
+  days: GeneratedDay[]
+}
+
 export type RootStackParamList = {
   Tabs: undefined
   PlaceDetail: { place: PlaceSearchResult }
   ItineraryDetail: { tripId: string }
+  AITripPreview: { itinerary: GeneratedItinerary }
 }
 
 export type TabParamList = {
