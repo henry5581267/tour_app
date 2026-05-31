@@ -5,6 +5,7 @@ import { RootStackParamList } from '../shared/types'
 import { TabNavigator } from './TabNavigator'
 import { PlaceDetailScreen } from '../features/places/screens/PlaceDetailScreen'
 import { ItineraryDetailScreen } from '../features/itinerary/screens/ItineraryDetailScreen'
+import { AITripPreviewScreen } from '../features/itinerary/screens/AITripPreviewScreen'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
@@ -17,6 +18,8 @@ export function AppNavigator() {
           options={{ title: '地點詳情', headerBackTitle: '返回' }} />
         <Stack.Screen name="ItineraryDetail" component={ItineraryDetailScreen}
           options={{ title: '行程詳細', headerBackTitle: '返回' }} />
+        <Stack.Screen name="AITripPreview" component={AITripPreviewScreen}
+          options={{ title: 'AI 行程預覽', headerBackTitle: '返回' }} />
       </Stack.Navigator>
     </NavigationContainer>
   )

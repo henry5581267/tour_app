@@ -13,6 +13,8 @@ import { CreateTripModal } from '../components/CreateTripModal'
 import { ShareTripModal } from '../components/ShareTripModal'
 import { JoinTripModal } from '../components/JoinTripModal'
 import { useTheme } from '../../../shared/theme/ThemeContext'
+import { AITripModal } from '../components/AITripModal'
+import { GeneratedItinerary } from '../../../shared/types'
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Tabs'>
 
@@ -30,6 +32,7 @@ export function ItineraryListScreen() {
   const [renameTarget, setRenameTarget] = useState<Trip | null>(null)
   const [renameText, setRenameText] = useState('')
   const [shareCode, setShareCode] = useState<string | null>(null)
+  const [showAI, setShowAI] = useState(false)
 
   const handleLongPress = (item: Trip) => {
     Alert.alert(item.name, '', [
@@ -77,6 +80,11 @@ export function ItineraryListScreen() {
     setRenameTarget(null)
   }
 
+  const handleAISuccess = (itinerary: GeneratedItinerary) => {
+    setShowAI(false)
+    navigation.navigate('AITripPreview', { itinerary })
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {trips.length === 0 ? (
@@ -115,6 +123,12 @@ export function ItineraryListScreen() {
         >
           <Text style={[styles.joinBtnText, { color: colors.primary }]}>加入行程</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.aiBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          onPress={() => setShowAI(true)}
+        >
+          <Text style={styles.aiBtnText}>✨</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={[styles.fab, { backgroundColor: colors.primary }]} onPress={() => setShowCreate(true)}>
           <Text style={styles.fabText}>+</Text>
         </TouchableOpacity>
@@ -123,6 +137,11 @@ export function ItineraryListScreen() {
       <CreateTripModal visible={showCreate} onClose={() => setShowCreate(false)} onCreate={async (name, days) => { await createTrip(name, days); setShowCreate(false) }} />
       <JoinTripModal visible={showJoin} onClose={() => setShowJoin(false)} />
       <ShareTripModal visible={!!shareCode} inviteCode={shareCode ?? ''} onClose={() => setShareCode(null)} />
+      <AITripModal
+        visible={showAI}
+        onClose={() => setShowAI(false)}
+        onSuccess={handleAISuccess}
+      />
 
       <Modal visible={!!renameTarget} transparent animationType="fade" onRequestClose={() => setRenameTarget(null)}>
         <View style={styles.renameOverlay}>
@@ -174,6 +193,13 @@ const styles = StyleSheet.create({
     elevation: 3, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 },
   },
   joinBtnText: { fontSize: 14, fontWeight: '700' },
+  aiBtn: {
+    width: 48, height: 48, borderRadius: 24, borderWidth: 1,
+    justifyContent: 'center', alignItems: 'center',
+    elevation: 3, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  aiBtnText: { fontSize: 22 },
   fab: {
     width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center',
     elevation: 6, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 },
