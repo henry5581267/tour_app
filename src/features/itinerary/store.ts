@@ -36,6 +36,7 @@ export const useItineraryStore = create<ItineraryState>((set, get) => ({
       name,
       days,
       createdAt: new Date().toISOString(),
+      isShared: false,
       tripDays: Array.from({ length: days }, (_, i) => ({ dayIndex: i, places: [] })),
     }
     await addTrip(trip)
