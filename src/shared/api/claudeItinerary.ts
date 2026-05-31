@@ -8,7 +8,7 @@ interface GenerateRequest {
 }
 
 export async function generateAIItinerary(params: GenerateRequest): Promise<GeneratedItinerary> {
-  const callable = functions('asia-east1').httpsCallable('generateItinerary')
+  const callable = functions().httpsCallable('generateItinerary')
   const result = await callable(params)
   return result.data as GeneratedItinerary
 }

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Trip, TripPlace } from '../../shared/types'
+import { Trip, TripPlace, GeneratedItinerary } from '../../shared/types'
 import {
   getTrips, addTrip, updateTrip, deleteTrip,
   getSharedTripIds, saveSharedTripIds,
@@ -48,6 +48,7 @@ interface ItineraryState {
   acquireDayLock: (tripId: string, dayIndex: number) => Promise<boolean>
   releaseDayLock: (tripId: string, dayIndex: number) => Promise<void>
   releaseAllLocksForTrip: (tripId: string) => Promise<void>
+  createTripFromAI: (itinerary: GeneratedItinerary) => Promise<Trip>
 }
 
 export const useItineraryStore = create<ItineraryState>((set, get) => ({
@@ -280,5 +281,33 @@ export const useItineraryStore = create<ItineraryState>((set, get) => ({
         await releaseDayLockInFirestore(tripId, day.dayIndex, deviceId).catch(() => {})
       }
     }
+  },
+
+  createTripFromAI: async (itinerary) => {
+    const trip: Trip = {
+      id: generateId(),
+      name: itinerary.tripName,
+      days: itinerary.days.length,
+      createdAt: new Date().toISOString(),
+      isShared: false,
+      tripDays: itinerary.days.map(d => ({
+        dayIndex: d.dayIndex,
+        places: d.places.map(p => ({
+          id: generateId(),
+          googlePlaceId: null,
+          name: p.name,
+          category: p.category,
+          lat: 0,
+          lng: 0,
+          address: p.address,
+          photo: '',
+          note: `${p.time} — ${p.note}`,
+        })),
+      })),
+    }
+    await addTrip(trip)
+    _localTrips.push(trip)
+    set({ trips: _merged() })
+    return trip
   },
 }))
