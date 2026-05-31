@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "718644471544",
+    "project_id": "project-c07446f5-fd0e-4be7-98a",
+    "storage_bucket": "project-c07446f5-fd0e-4be7-98a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:718644471544:android:0025f12182d07ddc3dfd0d",
+        "android_client_info": {
+          "package_name": "com.tourapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBTZHtmii29LEXEPUnIQndxZd5mt2jVyLo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
