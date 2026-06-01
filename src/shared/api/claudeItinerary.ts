@@ -30,8 +30,6 @@ const SYSTEM_PROMPT = `你是一個專業的繁體中文旅遊規劃師。使用
   ]
 }`
 
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
-
 interface GenerateRequest {
   destination: string
   days: number
@@ -41,13 +39,18 @@ interface GenerateRequest {
 export async function generateAIItinerary(params: GenerateRequest): Promise<GeneratedItinerary> {
   const userPrompt = `目的地：${params.destination}\n天數：${params.days} 天\n偏好：${params.preferences || '無特別偏好'}`
 
-  const response = await fetch(`${GEMINI_URL}?key=${Config.GEMINI_API_KEY}`, {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': Config.ANTHROPIC_API_KEY ?? '',
+      'anthropic-version': '2023-06-01',
+    },
     body: JSON.stringify({
-      systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-      contents: [{ parts: [{ text: userPrompt }] }],
-      generationConfig: { maxOutputTokens: 4096, temperature: 1.0 },
+      model: 'claude-sonnet-4-6',
+      max_tokens: 4096,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: userPrompt }],
     }),
   })
 
@@ -56,6 +59,6 @@ export async function generateAIItinerary(params: GenerateRequest): Promise<Gene
   }
 
   const data = await response.json()
-  const text = data.candidates[0].content.parts[0].text
+  const text = data.content[0].text
   return JSON.parse(text) as GeneratedItinerary
 }
