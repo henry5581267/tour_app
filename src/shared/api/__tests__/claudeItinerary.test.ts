@@ -14,21 +14,23 @@ afterEach(() => {
 })
 
 describe('generateAIItinerary', () => {
-  it('calls Claude API and returns parsed itinerary', async () => {
+  it('calls Gemini API and returns parsed itinerary', async () => {
     ;(global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ content: [{ text: JSON.stringify(mockItinerary) }] }),
+      json: async () => ({
+        candidates: [{ content: { parts: [{ text: JSON.stringify(mockItinerary) }] } }],
+      }),
     })
     const result = await generateAIItinerary({ destination: '台中', days: 3, preferences: '文創' })
     expect(result.tripName).toBe('台中之旅')
     expect(global.fetch).toHaveBeenCalledWith(
-      'https://api.anthropic.com/v1/messages',
+      expect.stringContaining('generativelanguage.googleapis.com'),
       expect.objectContaining({ method: 'POST' })
     )
   })
 
   it('throws on non-ok response', async () => {
-    ;(global.fetch as jest.Mock).mockResolvedValueOnce({ ok: false, status: 500 })
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({ ok: false, status: 429 })
     await expect(
       generateAIItinerary({ destination: '台中', days: 3, preferences: '' })
     ).rejects.toThrow('AI服務暫時無法使用')
