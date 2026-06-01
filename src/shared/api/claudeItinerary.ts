@@ -34,10 +34,15 @@ interface GenerateRequest {
   destination: string
   days: number
   preferences: string
+  wishlistPlaces?: string[]
 }
 
 export async function generateAIItinerary(params: GenerateRequest): Promise<GeneratedItinerary> {
-  const userPrompt = `目的地：${params.destination}\n天數：${params.days} 天\n偏好：${params.preferences || '無特別偏好'}`
+  let userPrompt = `目的地：${params.destination}\n天數：${params.days} 天\n偏好：${params.preferences || '無特別偏好'}`
+
+  if (params.wishlistPlaces && params.wishlistPlaces.length > 0) {
+    userPrompt += `\n\n以下是使用者的收藏景點清單，請優先將這些景點安排到行程中，不足的天數或種類再補充其他推薦：\n${params.wishlistPlaces.join('、')}`
+  }
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',

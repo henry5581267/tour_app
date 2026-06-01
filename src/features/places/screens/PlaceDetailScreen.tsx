@@ -6,12 +6,16 @@ import { getPlaceDetails } from '../../../shared/api/places'
 import { CategoryBadge } from '../../../shared/components/CategoryBadge'
 import { AddToTripModal } from '../../itinerary/components/AddToTripModal'
 import { useTheme } from '../../../shared/theme/ThemeContext'
+import { useWishlistStore } from '../../wishlist/store'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PlaceDetail'>
 
 export function PlaceDetailScreen({ route }: Props) {
   const { place } = route.params
   const { colors } = useTheme()
+  const addItem = useWishlistStore(s => s.addItem)
+  const removeItem = useWishlistStore(s => s.removeItem)
+  const wishlistItems = useWishlistStore(s => s.wishlist.items)
   const [openingHours, setOpeningHours] = useState<string | undefined>()
   const [showModal, setShowModal] = useState(false)
 
@@ -22,6 +26,19 @@ export function PlaceDetailScreen({ route }: Props) {
         .catch(() => {})
     }
   }, [place.googlePlaceId])
+
+  const savedItem = wishlistItems.find(i =>
+    place.googlePlaceId ? i.googlePlaceId === place.googlePlaceId : i.name === place.name
+  )
+  const isSaved = !!savedItem
+
+  const handleWishlistToggle = async () => {
+    if (isSaved && savedItem) {
+      await removeItem(savedItem.id)
+    } else {
+      await addItem(place)
+    }
+  }
 
   const tripPlace: TripPlace = {
     id: '', googlePlaceId: place.googlePlaceId,
@@ -56,6 +73,14 @@ export function PlaceDetailScreen({ route }: Props) {
         >
           <Text style={styles.addBtnText}>+ 加入行程</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.wishlistBtn, { backgroundColor: isSaved ? colors.primary : colors.surface, borderColor: colors.primary }]}
+          onPress={handleWishlistToggle}
+        >
+          <Text style={[styles.wishlistBtnText, { color: isSaved ? '#fff' : colors.primary }]}>
+            {isSaved ? '★ 已收藏' : '☆ 加入收藏'}
+          </Text>
+        </TouchableOpacity>
       </View>
       <AddToTripModal
         visible={showModal}
@@ -78,4 +103,6 @@ const styles = StyleSheet.create({
   hours: { fontSize: 13, lineHeight: 20 },
   addBtn: { marginTop: 24, borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
   addBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  wishlistBtn: { borderRadius: 10, borderWidth: 1.5, paddingVertical: 10, paddingHorizontal: 16, alignItems: 'center', marginTop: 8 },
+  wishlistBtnText: { fontSize: 14, fontWeight: '600' },
 })

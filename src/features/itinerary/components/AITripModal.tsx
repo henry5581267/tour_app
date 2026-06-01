@@ -6,6 +6,7 @@ import {
 import { useTheme } from '../../../shared/theme/ThemeContext'
 import { generateAIItinerary } from '../../../shared/api/claudeItinerary'
 import { GeneratedItinerary } from '../../../shared/types'
+import { useWishlistStore } from '../../wishlist/store'
 
 interface Props {
   visible: boolean
@@ -15,6 +16,8 @@ interface Props {
 
 export function AITripModal({ visible, onClose, onSuccess }: Props) {
   const { colors } = useTheme()
+  const wishlistItems = useWishlistStore(s => s.wishlist.items)
+  const [useWishlist, setUseWishlist] = useState(false)
   const [destination, setDestination] = useState('')
   const [days, setDays] = useState(3)
   const [preferences, setPreferences] = useState('')
@@ -30,10 +33,12 @@ export function AITripModal({ visible, onClose, onSuccess }: Props) {
         destination: destination.trim(),
         days,
         preferences,
+        wishlistPlaces: useWishlist ? wishlistItems.map(i => i.name) : undefined,
       })
       setDestination('')
       setDays(3)
       setPreferences('')
+      setUseWishlist(false)
       onSuccess(itinerary)
     } catch (err: any) {
       Alert.alert('規劃失敗', err?.message ?? 'AI服務暫時無法使用，請稍後再試')
@@ -88,6 +93,21 @@ export function AITripModal({ visible, onClose, onSuccess }: Props) {
             textAlignVertical="top"
           />
 
+          {wishlistItems.length > 0 && (
+            <TouchableOpacity
+              style={styles.checkboxRow}
+              onPress={() => setUseWishlist(v => !v)}
+              disabled={loading}
+            >
+              <View style={[styles.checkbox, { borderColor: colors.primary, backgroundColor: useWishlist ? colors.primary : 'transparent' }]}>
+                {useWishlist && <Text style={styles.checkmark}>✓</Text>}
+              </View>
+              <Text style={[styles.checkboxLabel, { color: colors.text }]}>
+                從收藏清單規劃（{wishlistItems.length} 個景點）
+              </Text>
+            </TouchableOpacity>
+          )}
+
           <View style={styles.btns}>
             <TouchableOpacity
               style={[styles.generateBtn, { backgroundColor: canSubmit ? colors.primary : colors.surfaceSecondary }]}
@@ -132,4 +152,8 @@ const styles = StyleSheet.create({
   generateBtnText: { fontSize: 16, fontWeight: '700' },
   cancelBtn: { paddingVertical: 10, alignItems: 'center' },
   cancelBtnText: { fontSize: 15 },
+  checkboxRow: { flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 10 },
+  checkbox: { width: 22, height: 22, borderRadius: 4, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },
+  checkmark: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  checkboxLabel: { fontSize: 14, flex: 1 },
 })

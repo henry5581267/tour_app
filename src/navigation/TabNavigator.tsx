@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { Text, TouchableOpacity } from 'react-native'
 import { TabParamList } from '../shared/types'
 import { PlacesScreen } from '../features/places/screens/PlacesScreen'
+import { WishlistScreen } from '../features/wishlist/screens/WishlistScreen'
 import { ItineraryListScreen } from '../features/itinerary/screens/ItineraryListScreen'
 import { MapScreen } from '../features/map/screens/MapScreen'
 import { useTheme } from '../shared/theme/ThemeContext'
@@ -39,6 +40,8 @@ export function TabNavigator() {
     >
       <Tab.Screen name="Places" component={PlacesScreen}
         options={{ title: '探索', tabBarIcon: icon('🔍') }} />
+      <Tab.Screen name="Wishlist" component={WishlistScreen}
+        options={{ title: '收藏', tabBarLabel: '收藏', tabBarIcon: icon('⭐') }} />
       <Tab.Screen name="Itinerary" component={ItineraryListScreen}
         options={{ title: '行程', tabBarIcon: icon('📋') }} />
       <Tab.Screen name="Map" component={MapScreen}
