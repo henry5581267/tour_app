@@ -17,37 +17,40 @@ export async function uploadWishlist(
   wishlist: Wishlist,
   deviceId: string,
 ): Promise<string> {
-  const code = generateInviteCode()
-  await firestore().collection(WISHLISTS).doc(wishlist.id).set({
+  const code = generateInviteCode().toUpperCase()
+  const batch = firestore().batch()
+  batch.set(firestore().collection(WISHLISTS).doc(wishlist.id), {
     id: wishlist.id,
     inviteCode: code,
     items: wishlist.items,
     members: [deviceId],
   })
-  await firestore().collection(WISHLIST_INVITE_CODES).doc(code).set({
+  batch.set(firestore().collection(WISHLIST_INVITE_CODES).doc(code), {
     wishlistId: wishlist.id,
   })
+  await batch.commit()
   return code
 }
 
 export async function fetchWishlistByCode(
   code: string,
 ): Promise<{ id: string; items: WishlistItem[] } | null> {
-  const codeDoc = await firestore()
+  const upperCode = code.toUpperCase()
+  const codeSnap = await firestore()
     .collection(WISHLIST_INVITE_CODES)
-    .doc(code.toUpperCase())
+    .doc(upperCode)
     .get()
-  if (!codeDoc.exists) return null
+  if (!codeSnap.exists) return null
 
-  const { wishlistId } = (codeDoc as any).data() as { wishlistId: string }
-  const wishlistDoc = await firestore()
+  const { wishlistId } = (codeSnap as any).data() as { wishlistId: string }
+  const wishlistSnap = await firestore()
     .collection(WISHLISTS)
     .doc(wishlistId)
     .get()
-  if (!wishlistDoc.exists) return null
+  if (!wishlistSnap.exists) return null
 
-  const data = (wishlistDoc as any).data() as { id: string; items: WishlistItem[] }
-  return { id: data.id, items: data.items }
+  const data = (wishlistSnap as any).data() as { id: string; items: WishlistItem[] }
+  return { id: data.id, items: data.items ?? [] }
 }
 
 export async function addWishlistMember(
