@@ -40,6 +40,25 @@ export interface PlaceSearchResult {
   category: PlaceCategory
 }
 
+export interface WishlistItem {
+  id: string
+  googlePlaceId: string | null
+  name: string
+  category: PlaceCategory
+  lat: number
+  lng: number
+  address: string
+  photo: string
+  addedAt: string
+}
+
+export interface Wishlist {
+  id: string
+  items: WishlistItem[]
+  isShared: boolean
+  inviteCode?: string
+}
+
 export interface GeneratedPlace {
   name: string
   category: PlaceCategory
@@ -68,6 +87,7 @@ export type RootStackParamList = {
 
 export type TabParamList = {
   Places: undefined
+  Wishlist: undefined
   Itinerary: undefined
   Map: undefined
 }
