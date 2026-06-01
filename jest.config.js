@@ -13,6 +13,6 @@ module.exports = {
     '@react-native-firebase/functions': '<rootDir>/__mocks__/@react-native-firebase/functions.js',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|@react-navigation|@react-native-community|@react-native-firebase|zustand)/)',
+    'node_modules/(?!(react-native|@react-native|@react-navigation|@react-native-community|@react-native-firebase|@anthropic-ai|zustand)/)',
   ],
 }
