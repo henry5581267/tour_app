@@ -7,17 +7,15 @@ import { CategoryBadge } from '../../../shared/components/CategoryBadge'
 import { AddToTripModal } from '../../itinerary/components/AddToTripModal'
 import { useTheme } from '../../../shared/theme/ThemeContext'
 import { useWishlistStore } from '../../wishlist/store'
+import { WishlistPickerModal } from '../../wishlist/components/WishlistPickerModal'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PlaceDetail'>
 
 export function PlaceDetailScreen({ route }: Props) {
   const { place } = route.params
   const { colors } = useTheme()
-  const wishlists = useWishlistStore(s => s.wishlists)
-  const addItemToWishlist = useWishlistStore(s => s.addItemToWishlist)
-  const removeItemFromWishlist = useWishlistStore(s => s.removeItemFromWishlist)
   const isInAnyWishlist = useWishlistStore(s => s.isInAnyWishlist)
-  const getWishlistsContaining = useWishlistStore(s => s.getWishlistsContaining)
+  const [showPicker, setShowPicker] = useState(false)
   const [openingHours, setOpeningHours] = useState<string | undefined>()
   const [showModal, setShowModal] = useState(false)
 
@@ -30,26 +28,6 @@ export function PlaceDetailScreen({ route }: Props) {
   }, [place.googlePlaceId])
 
   const isSaved = isInAnyWishlist(place.googlePlaceId, place.name)
-
-  const handleWishlistToggle = async () => {
-    if (isSaved) {
-      const containingIds = getWishlistsContaining(place.googlePlaceId, place.name)
-      for (const wishlistId of containingIds) {
-        const wl = wishlists.find(w => w.id === wishlistId)
-        if (wl) {
-          const item = wl.items.find(i =>
-            place.googlePlaceId ? i.googlePlaceId === place.googlePlaceId : i.name === place.name
-          )
-          if (item) await removeItemFromWishlist(wishlistId, item.id)
-        }
-      }
-    } else {
-      const defaultList = wishlists[0]
-      if (defaultList) {
-        await addItemToWishlist(defaultList.id, place)
-      }
-    }
-  }
 
   const tripPlace: TripPlace = {
     id: '', googlePlaceId: place.googlePlaceId,
@@ -86,7 +64,7 @@ export function PlaceDetailScreen({ route }: Props) {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.wishlistBtn, { backgroundColor: isSaved ? colors.primary : colors.surface, borderColor: colors.primary }]}
-          onPress={handleWishlistToggle}
+          onPress={() => setShowPicker(true)}
         >
           <Text style={[styles.wishlistBtnText, { color: isSaved ? '#fff' : colors.primary }]}>
             {isSaved ? '★ 已收藏' : '☆ 加入收藏'}
@@ -98,6 +76,11 @@ export function PlaceDetailScreen({ route }: Props) {
         place={tripPlace}
         onClose={() => setShowModal(false)}
         onAdded={() => Alert.alert('已加入', `${place.name} 已加入行程`)}
+      />
+      <WishlistPickerModal
+        visible={showPicker}
+        place={place}
+        onClose={() => setShowPicker(false)}
       />
     </ScrollView>
   )

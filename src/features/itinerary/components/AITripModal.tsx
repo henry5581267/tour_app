@@ -17,8 +17,7 @@ interface Props {
 export function AITripModal({ visible, onClose, onSuccess }: Props) {
   const { colors } = useTheme()
   const wishlists = useWishlistStore(s => s.wishlists)
-  const wishlistItems = wishlists.flatMap(w => w.items)
-  const [useWishlist, setUseWishlist] = useState(false)
+  const [selectedWishlistId, setSelectedWishlistId] = useState<string | null>(null)
   const [destination, setDestination] = useState('')
   const [days, setDays] = useState(3)
   const [preferences, setPreferences] = useState('')
@@ -30,16 +29,17 @@ export function AITripModal({ visible, onClose, onSuccess }: Props) {
     if (!canSubmit) return
     setLoading(true)
     try {
+      const selectedWishlist = wishlists.find(w => w.id === selectedWishlistId)
       const itinerary = await generateAIItinerary({
         destination: destination.trim(),
         days,
         preferences,
-        wishlistPlaces: useWishlist ? wishlistItems.map(i => i.name) : undefined,
+        wishlistPlaces: selectedWishlist ? selectedWishlist.items.map(i => i.name) : undefined,
       })
       setDestination('')
       setDays(3)
       setPreferences('')
-      setUseWishlist(false)
+      setSelectedWishlistId(null)
       onSuccess(itinerary)
     } catch (err: any) {
       Alert.alert('規劃失敗', err?.message ?? 'AI服務暫時無法使用，請稍後再試')
@@ -94,19 +94,27 @@ export function AITripModal({ visible, onClose, onSuccess }: Props) {
             textAlignVertical="top"
           />
 
-          {wishlistItems.length > 0 && (
-            <TouchableOpacity
-              style={styles.checkboxRow}
-              onPress={() => setUseWishlist(v => !v)}
-              disabled={loading}
-            >
-              <View style={[styles.checkbox, { borderColor: colors.primary, backgroundColor: useWishlist ? colors.primary : 'transparent' }]}>
-                {useWishlist && <Text style={styles.checkmark}>✓</Text>}
-              </View>
-              <Text style={[styles.checkboxLabel, { color: colors.text }]}>
-                從收藏清單規劃（{wishlistItems.length} 個景點）
-              </Text>
-            </TouchableOpacity>
+          {wishlists.length > 0 && (
+            <View style={styles.wishlistSection}>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>使用收藏清單（選填）</Text>
+              <TouchableOpacity
+                style={[styles.wishlistPicker, { borderColor: colors.border, backgroundColor: colors.surfaceSecondary }]}
+                onPress={() => {
+                  // cycle through: null → first list → second list → ... → null
+                  const idx = wishlists.findIndex(w => w.id === selectedWishlistId)
+                  const next = idx < wishlists.length - 1 ? wishlists[idx + 1].id : null
+                  setSelectedWishlistId(next)
+                }}
+                disabled={loading}
+              >
+                <Text style={[styles.wishlistPickerText, { color: selectedWishlistId ? colors.primary : colors.textTertiary }]}>
+                  {selectedWishlistId
+                    ? `✓ ${wishlists.find(w => w.id === selectedWishlistId)?.name ?? '清單'}`
+                    : '不使用收藏清單'}
+                </Text>
+                <Text style={[{ color: colors.textTertiary }]}>›</Text>
+              </TouchableOpacity>
+            </View>
           )}
 
           <View style={styles.btns}>
@@ -153,8 +161,7 @@ const styles = StyleSheet.create({
   generateBtnText: { fontSize: 16, fontWeight: '700' },
   cancelBtn: { paddingVertical: 10, alignItems: 'center' },
   cancelBtnText: { fontSize: 15 },
-  checkboxRow: { flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 10 },
-  checkbox: { width: 22, height: 22, borderRadius: 4, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },
-  checkmark: { color: '#fff', fontSize: 13, fontWeight: '700' },
-  checkboxLabel: { fontSize: 14, flex: 1 },
+  wishlistSection: { marginTop: 16 },
+  wishlistPicker: { borderWidth: 1.5, borderRadius: 10, padding: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
+  wishlistPickerText: { fontSize: 14 },
 })
