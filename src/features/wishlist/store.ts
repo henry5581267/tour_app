@@ -1,14 +1,24 @@
 import { create } from 'zustand'
 import { Wishlist, WishlistItem, PlaceSearchResult } from '../../shared/types'
 import { getWishlists, saveWishlists } from '../../shared/storage/wishlistStorage'
-import { uploadWishlist, fetchWishlistByCode, addWishlistMember, removeWishlistMember } from '../../shared/firebase/wishlistFirestore'
+import {
+  uploadWishlist, fetchWishlistByCode,
+  addWishlistMember, removeWishlistMember,
+  updateSharedWishlist, subscribeToWishlist,
+} from '../../shared/firebase/wishlistFirestore'
 import { getDeviceId } from '../../shared/firebase/deviceId'
 
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2)
 }
 
-let _wishlists: Wishlist[] = []
+const _listeners: Record<string, () => void> = {}
+let _localWishlists: Wishlist[] = []
+const _sharedWishlists = new Map<string, Wishlist>()
+
+function _merged(): Wishlist[] {
+  return [..._localWishlists, ..._sharedWishlists.values()]
+}
 
 interface WishlistState {
   wishlists: Wishlist[]
@@ -21,6 +31,7 @@ interface WishlistState {
   shareWishlist: (id: string) => Promise<string>
   joinWishlist: (code: string) => Promise<void>
   leaveWishlist: (id: string) => Promise<void>
+  subscribeToSharedWishlist: (id: string) => void
   isInAnyWishlist: (googlePlaceId: string | null, name: string) => boolean
   getWishlistsContaining: (googlePlaceId: string | null, name: string) => string[]
 }
@@ -30,33 +41,32 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
 
   loadWishlists: async () => {
     const stored = await getWishlists()
-    _wishlists = stored
-    set({ wishlists: [..._wishlists] })
+    _localWishlists = stored.filter(w => !w.isShared)
+    const sharedStored = stored.filter(w => w.isShared)
+    sharedStored.forEach(w => _sharedWishlists.set(w.id, w))
+    set({ wishlists: _merged() })
+    // Re-subscribe to all shared wishlists
+    sharedStored.forEach(w => get().subscribeToSharedWishlist(w.id))
   },
 
   createWishlist: async (name) => {
-    const newList: Wishlist = {
-      id: generateId(),
-      name,
-      items: [],
-      isShared: false,
-    }
-    _wishlists.push(newList)
-    set({ wishlists: [..._wishlists] })
-    await saveWishlists(_wishlists)
+    const newList: Wishlist = { id: generateId(), name, items: [], isShared: false }
+    _localWishlists.push(newList)
+    set({ wishlists: _merged() })
+    await saveWishlists(_merged())
     return newList
   },
 
   deleteWishlist: async (id) => {
-    _wishlists = _wishlists.filter(w => w.id !== id)
-    set({ wishlists: [..._wishlists] })
-    await saveWishlists(_wishlists)
+    _localWishlists = _localWishlists.filter(w => w.id !== id)
+    set({ wishlists: _merged() })
+    await saveWishlists(_merged())
   },
 
   renameWishlist: async (id, name) => {
-    _wishlists = _wishlists.map(w => w.id === id ? { ...w, name } : w)
-    set({ wishlists: [..._wishlists] })
-    await saveWishlists(_wishlists)
+    _localWishlists = _localWishlists.map(w => w.id === id ? { ...w, name } : w)
+    set({ wishlists: _merged() })
+    await saveWishlists(_merged())
   },
 
   addItemToWishlist: async (wishlistId, place) => {
@@ -71,29 +81,48 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       photo: place.photo,
       addedAt: new Date().toISOString(),
     }
-    _wishlists = _wishlists.map(w =>
-      w.id === wishlistId ? { ...w, items: [...w.items, item] } : w
-    )
-    set({ wishlists: [..._wishlists] })
-    await saveWishlists(_wishlists)
+    const shared = _sharedWishlists.get(wishlistId)
+    if (shared) {
+      const updated = { ...shared, items: [...shared.items, item] }
+      _sharedWishlists.set(wishlistId, updated)
+      set({ wishlists: _merged() })
+      await updateSharedWishlist(wishlistId, updated.items)
+    } else {
+      _localWishlists = _localWishlists.map(w =>
+        w.id === wishlistId ? { ...w, items: [...w.items, item] } : w
+      )
+      set({ wishlists: _merged() })
+      await saveWishlists(_merged())
+    }
   },
 
   removeItemFromWishlist: async (wishlistId, itemId) => {
-    _wishlists = _wishlists.map(w =>
-      w.id === wishlistId ? { ...w, items: w.items.filter(i => i.id !== itemId) } : w
-    )
-    set({ wishlists: [..._wishlists] })
-    await saveWishlists(_wishlists)
+    const shared = _sharedWishlists.get(wishlistId)
+    if (shared) {
+      const updated = { ...shared, items: shared.items.filter(i => i.id !== itemId) }
+      _sharedWishlists.set(wishlistId, updated)
+      set({ wishlists: _merged() })
+      await updateSharedWishlist(wishlistId, updated.items)
+    } else {
+      _localWishlists = _localWishlists.map(w =>
+        w.id === wishlistId ? { ...w, items: w.items.filter(i => i.id !== itemId) } : w
+      )
+      set({ wishlists: _merged() })
+      await saveWishlists(_merged())
+    }
   },
 
   shareWishlist: async (id) => {
-    const wishlist = _wishlists.find(w => w.id === id)
+    const wishlist = _localWishlists.find(w => w.id === id)
     if (!wishlist) throw new Error('清單不存在')
     const deviceId = await getDeviceId()
     const code = await uploadWishlist(wishlist, deviceId)
-    _wishlists = _wishlists.map(w => w.id === id ? { ...w, isShared: true, inviteCode: code } : w)
-    set({ wishlists: [..._wishlists] })
-    await saveWishlists(_wishlists)
+    const shared = { ...wishlist, isShared: true, inviteCode: code }
+    _localWishlists = _localWishlists.filter(w => w.id !== id)
+    _sharedWishlists.set(id, shared)
+    set({ wishlists: _merged() })
+    await saveWishlists(_merged())
+    get().subscribeToSharedWishlist(id)
     return code
   },
 
@@ -109,24 +138,39 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       isShared: true,
       inviteCode: code.toUpperCase(),
     }
-    _wishlists.push(joined)
-    set({ wishlists: [..._wishlists] })
-    await saveWishlists(_wishlists)
+    _sharedWishlists.set(joined.id, joined)
+    set({ wishlists: _merged() })
+    await saveWishlists(_merged())
+    get().subscribeToSharedWishlist(joined.id)
   },
 
   leaveWishlist: async (id) => {
-    const wishlist = _wishlists.find(w => w.id === id)
+    if (_listeners[id]) { _listeners[id](); delete _listeners[id] }
+    const wishlist = _sharedWishlists.get(id)
     if (wishlist?.isShared) {
       const deviceId = await getDeviceId()
       await removeWishlistMember(id, deviceId)
     }
-    _wishlists = _wishlists.filter(w => w.id !== id)
-    set({ wishlists: [..._wishlists] })
-    await saveWishlists(_wishlists)
+    _sharedWishlists.delete(id)
+    set({ wishlists: _merged() })
+    await saveWishlists(_merged())
+  },
+
+  subscribeToSharedWishlist: (id) => {
+    if (_listeners[id]) return
+    const unsub = subscribeToWishlist(id, (data) => {
+      if (!data) return
+      const existing = _sharedWishlists.get(id)
+      if (!existing) return
+      _sharedWishlists.set(id, { ...existing, items: data.items, name: data.name ?? existing.name })
+      useWishlistStore.setState({ wishlists: _merged() })
+      saveWishlists(_merged())
+    })
+    _listeners[id] = unsub
   },
 
   isInAnyWishlist: (googlePlaceId, name) => {
-    return _wishlists.some(w =>
+    return _merged().some(w =>
       googlePlaceId
         ? w.items.some(i => i.googlePlaceId === googlePlaceId)
         : w.items.some(i => i.name === name)
@@ -134,7 +178,7 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
   },
 
   getWishlistsContaining: (googlePlaceId, name) => {
-    return _wishlists
+    return _merged()
       .filter(w =>
         googlePlaceId
           ? w.items.some(i => i.googlePlaceId === googlePlaceId)

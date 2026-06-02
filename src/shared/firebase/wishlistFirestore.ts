@@ -76,3 +76,24 @@ export async function removeWishlistMember(
       members: (firestore as any).FieldValue.arrayRemove(deviceId),
     })
 }
+
+export async function updateSharedWishlist(
+  wishlistId: string,
+  items: WishlistItem[],
+): Promise<void> {
+  await firestore().collection('wishlists').doc(wishlistId).update({ items })
+}
+
+export function subscribeToWishlist(
+  wishlistId: string,
+  onUpdate: (data: { id: string; name: string; items: WishlistItem[] } | null) => void,
+): () => void {
+  return firestore()
+    .collection('wishlists')
+    .doc(wishlistId)
+    .onSnapshot(snap => {
+      if (!snap.exists) { onUpdate(null); return }
+      const data = (snap as any).data() as { id: string; name: string; items: WishlistItem[] }
+      onUpdate(data)
+    })
+}
