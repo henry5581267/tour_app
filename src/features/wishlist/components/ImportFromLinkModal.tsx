@@ -14,28 +14,39 @@ interface Props {
 
 export function ImportFromLinkModal({ visible, onClose }: Props) {
   const { colors } = useTheme()
-  const [listName, setListName] = useState('')
-  const [placeNames, setPlaceNames] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [progress, setProgress] = useState('')
+  const wishlists = useWishlistStore(s => s.wishlists)
   const createWishlist = useWishlistStore(s => s.createWishlist)
   const addItemToWishlist = useWishlistStore(s => s.addItemToWishlist)
 
-  const names = placeNames
-    .split('\n')
-    .map(s => s.trim())
-    .filter(s => s.length > 0)
+  // null = 建立新清單, string = 選擇的既有清單 id
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [newName, setNewName] = useState('')
+  const [placeNames, setPlaceNames] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [progress, setProgress] = useState('')
 
-  const canSubmit = names.length > 0 && !loading
+  const names = placeNames.split('\n').map(s => s.trim()).filter(s => s.length > 0)
+  const canSubmit = names.length > 0 && !loading && (selectedId !== null || newName.trim().length > 0)
 
   const handleImport = async () => {
     if (!canSubmit) return
     setLoading(true)
     setProgress('')
-    const name = listName.trim() || '匯入清單'
-    const created = await createWishlist(name)
+
+    let targetId: string
+    let targetName: string
+
+    if (selectedId) {
+      targetId = selectedId
+      targetName = wishlists.find(w => w.id === selectedId)?.name ?? '清單'
+    } else {
+      const created = await createWishlist(newName.trim())
+      targetId = created.id
+      targetName = created.name
+    }
+
     let found = 0
-    let failed: string[] = []
+    const failed: string[] = []
 
     for (let i = 0; i < names.length; i++) {
       const q = names[i]
@@ -43,7 +54,7 @@ export function ImportFromLinkModal({ visible, onClose }: Props) {
       try {
         const results = await searchPlaces(q, 'attraction')
         if (results.length > 0) {
-          await addItemToWishlist(created.id, results[0])
+          await addItemToWishlist(targetId, results[0])
           found++
         } else {
           failed.push(q)
@@ -56,10 +67,11 @@ export function ImportFromLinkModal({ visible, onClose }: Props) {
     setLoading(false)
     setProgress('')
 
-    let msg = `已加入 ${found} 個景點到「${name}」`
+    let msg = `已加入 ${found} 個景點到「${targetName}」`
     if (failed.length > 0) msg += `\n\n找不到：${failed.join('、')}`
     Alert.alert('匯入完成', msg)
-    setListName('')
+    setSelectedId(null)
+    setNewName('')
     setPlaceNames('')
     onClose()
   }
@@ -67,20 +79,52 @@ export function ImportFromLinkModal({ visible, onClose }: Props) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={[styles.sheet, { backgroundColor: colors.surface }]}>
+        <ScrollView contentContainerStyle={[styles.sheet, { backgroundColor: colors.surface }]}
+          keyboardShouldPersistTaps="handled">
           <Text style={[styles.title, { color: colors.text }]}>批次加入景點</Text>
 
-          <Text style={[styles.label, { color: colors.textSecondary }]}>清單名稱（選填）</Text>
-          <TextInput
-            style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surfaceSecondary }]}
-            value={listName}
-            onChangeText={setListName}
-            placeholder="例如：台中美食"
-            placeholderTextColor={colors.textTertiary}
-            editable={!loading}
-          />
+          <Text style={[styles.label, { color: colors.textSecondary }]}>選擇清單</Text>
 
-          <Text style={[styles.label, { color: colors.textSecondary }]}>
+          {/* 既有清單 */}
+          {wishlists.map(wl => (
+            <TouchableOpacity
+              key={wl.id}
+              style={[styles.listOption, {
+                borderColor: selectedId === wl.id ? colors.primary : colors.border,
+                backgroundColor: selectedId === wl.id ? colors.primary + '15' : colors.surfaceSecondary,
+              }]}
+              onPress={() => setSelectedId(wl.id)}
+              disabled={loading}
+            >
+              <Text style={[styles.listOptionText, { color: colors.text }]}>{wl.name}</Text>
+              <Text style={[styles.listOptionCount, { color: colors.textTertiary }]}>{wl.items.length} 個景點</Text>
+            </TouchableOpacity>
+          ))}
+
+          {/* 新建清單 */}
+          <TouchableOpacity
+            style={[styles.listOption, {
+              borderColor: selectedId === null ? colors.primary : colors.border,
+              backgroundColor: selectedId === null ? colors.primary + '15' : colors.surfaceSecondary,
+            }]}
+            onPress={() => setSelectedId(null)}
+            disabled={loading}
+          >
+            <Text style={[styles.listOptionText, { color: colors.primary }]}>＋ 建立新清單</Text>
+          </TouchableOpacity>
+
+          {selectedId === null && (
+            <TextInput
+              style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surfaceSecondary, marginTop: 8 }]}
+              value={newName}
+              onChangeText={setNewName}
+              placeholder="新清單名稱"
+              placeholderTextColor={colors.textTertiary}
+              editable={!loading}
+            />
+          )}
+
+          <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>
             景點名稱（每行一個，共 {names.length} 個）
           </Text>
           <TextInput
@@ -120,7 +164,7 @@ export function ImportFromLinkModal({ visible, onClose }: Props) {
           <TouchableOpacity style={styles.cancelBtn} onPress={onClose} disabled={loading}>
             <Text style={[styles.cancelText, { color: colors.textSecondary }]}>取消</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </View>
     </Modal>
   )
@@ -130,9 +174,12 @@ const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   sheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },
   title: { fontSize: 18, fontWeight: '700', marginBottom: 16 },
-  label: { fontSize: 13, fontWeight: '600', marginBottom: 8, marginTop: 12 },
+  label: { fontSize: 13, fontWeight: '600', marginBottom: 8 },
+  listOption: { borderWidth: 1.5, borderRadius: 10, padding: 12, marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  listOptionText: { fontSize: 14, fontWeight: '600' },
+  listOptionCount: { fontSize: 12 },
   input: { borderWidth: 1.5, borderRadius: 10, padding: 12, fontSize: 14 },
-  textArea: { borderWidth: 1.5, borderRadius: 10, padding: 12, fontSize: 14, height: 160 },
+  textArea: { borderWidth: 1.5, borderRadius: 10, padding: 12, fontSize: 14, height: 140 },
   hint: { fontSize: 12, marginTop: 8, lineHeight: 18 },
   progressRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 20, paddingVertical: 4 },
   progressText: { flex: 1, fontSize: 13 },
