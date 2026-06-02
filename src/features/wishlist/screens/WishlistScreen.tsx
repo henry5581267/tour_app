@@ -7,6 +7,7 @@ import { RootStackParamList } from '../../../shared/types'
 import { useWishlistStore } from '../store'
 import { CreateWishlistModal } from '../components/CreateWishlistModal'
 import { JoinWishlistModal } from '../components/JoinWishlistModal'
+import { ImportGoogleMapsModal } from '../components/ImportGoogleMapsModal'
 import { EmptyState } from '../../../shared/components/EmptyState'
 import { useTheme } from '../../../shared/theme/ThemeContext'
 
@@ -22,6 +23,7 @@ export function WishlistScreen() {
 
   const [showCreate, setShowCreate] = useState(false)
   const [showJoin, setShowJoin] = useState(false)
+  const [showImport, setShowImport] = useState(false)
 
   const handleLongPress = (id: string, name: string, isShared: boolean) => {
     Alert.alert(name, '', [
@@ -83,6 +85,12 @@ export function WishlistScreen() {
           <Text style={[styles.joinText, { color: colors.text }]}>加入清單</Text>
         </TouchableOpacity>
         <TouchableOpacity
+          style={[styles.importBtn, { borderColor: colors.border }]}
+          onPress={() => setShowImport(true)}
+        >
+          <Text style={[styles.importBtnText, { color: colors.text }]}>匯入 📥</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
           style={[styles.createBtn, { backgroundColor: colors.primary }]}
           onPress={() => setShowCreate(true)}
         >
@@ -103,6 +111,14 @@ export function WishlistScreen() {
         onClose={() => setShowJoin(false)}
         onSuccess={() => setShowJoin(false)}
       />
+      <ImportGoogleMapsModal
+        visible={showImport}
+        onClose={() => setShowImport(false)}
+        onSuccess={(count) => {
+          setShowImport(false)
+          Alert.alert('匯入成功', `已建立 ${count} 個收藏清單`)
+        }}
+      />
     </SafeAreaView>
   )
 }
@@ -116,9 +132,11 @@ const styles = StyleSheet.create({
   cardName: { fontSize: 17, fontWeight: '700' },
   cardCount: { fontSize: 18 },
   cardSub: { fontSize: 13, marginTop: 4 },
-  fabRow: { flexDirection: 'row', gap: 10, padding: 16, borderTopWidth: 1 },
+  fabRow: { flexDirection: 'row', gap: 8, padding: 16, borderTopWidth: 1 },
   joinBtn: { flex: 1, borderRadius: 12, borderWidth: 1, paddingVertical: 13, alignItems: 'center' },
   joinText: { fontSize: 14, fontWeight: '600' },
+  importBtn: { flex: 1, borderRadius: 12, borderWidth: 1, paddingVertical: 13, alignItems: 'center' },
+  importBtnText: { fontSize: 13, fontWeight: '600' },
   createBtn: { flex: 2, borderRadius: 12, paddingVertical: 13, alignItems: 'center' },
   createText: { color: '#fff', fontSize: 14, fontWeight: '700' },
 })

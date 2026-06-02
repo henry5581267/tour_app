@@ -11,6 +11,8 @@ module.exports = {
     '@react-native-firebase/app': '<rootDir>/__mocks__/@react-native-firebase/app.js',
     '@react-native-firebase/firestore': '<rootDir>/__mocks__/@react-native-firebase/firestore.js',
     '@react-native-firebase/functions': '<rootDir>/__mocks__/@react-native-firebase/functions.js',
+    'react-native-document-picker': '<rootDir>/__mocks__/react-native-document-picker.js',
+    'react-native-blob-util': '<rootDir>/__mocks__/react-native-blob-util.js',
   },
   transformIgnorePatterns: [
     'node_modules/(?!(react-native|@react-native|@react-navigation|@react-native-community|@react-native-firebase|@anthropic-ai|zustand)/)',
