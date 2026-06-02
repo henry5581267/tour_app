@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import {
   Modal, View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert, ScrollView,
+  StyleSheet, ActivityIndicator, Alert, ScrollView, FlatList,
 } from 'react-native'
 import { useTheme } from '../../../shared/theme/ThemeContext'
 import { useWishlistStore } from '../store'
@@ -18,15 +18,17 @@ export function ImportFromLinkModal({ visible, onClose }: Props) {
   const createWishlist = useWishlistStore(s => s.createWishlist)
   const addItemToWishlist = useWishlistStore(s => s.addItemToWishlist)
 
-  // null = 建立新清單, string = 選擇的既有清單 id
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [newName, setNewName] = useState('')
   const [placeNames, setPlaceNames] = useState('')
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState('')
+  const [dropdownOpen, setDropdownOpen] = useState(false)
 
   const names = placeNames.split('\n').map(s => s.trim()).filter(s => s.length > 0)
   const canSubmit = names.length > 0 && !loading && (selectedId !== null || newName.trim().length > 0)
+  const selectedWishlist = wishlists.find(w => w.id === selectedId)
+  const displayName = selectedWishlist ? selectedWishlist.name : (newName.trim() || '選擇或建立清單')
 
   const handleImport = async () => {
     if (!canSubmit) return
@@ -38,7 +40,7 @@ export function ImportFromLinkModal({ visible, onClose }: Props) {
 
     if (selectedId) {
       targetId = selectedId
-      targetName = wishlists.find(w => w.id === selectedId)?.name ?? '清單'
+      targetName = selectedWishlist?.name ?? '清單'
     } else {
       const created = await createWishlist(newName.trim())
       targetId = created.id
@@ -76,6 +78,12 @@ export function ImportFromLinkModal({ visible, onClose }: Props) {
     onClose()
   }
 
+  const handleSelectWishlist = (id: string | null) => {
+    setSelectedId(id)
+    if (id !== null) setNewName('')
+    setDropdownOpen(false)
+  }
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
@@ -83,35 +91,48 @@ export function ImportFromLinkModal({ visible, onClose }: Props) {
           keyboardShouldPersistTaps="handled">
           <Text style={[styles.title, { color: colors.text }]}>批次加入景點</Text>
 
+          {/* Combobox 選擇清單 */}
           <Text style={[styles.label, { color: colors.textSecondary }]}>選擇清單</Text>
-
-          {/* 既有清單 */}
-          {wishlists.map(wl => (
-            <TouchableOpacity
-              key={wl.id}
-              style={[styles.listOption, {
-                borderColor: selectedId === wl.id ? colors.primary : colors.border,
-                backgroundColor: selectedId === wl.id ? colors.primary + '15' : colors.surfaceSecondary,
-              }]}
-              onPress={() => setSelectedId(wl.id)}
-              disabled={loading}
-            >
-              <Text style={[styles.listOptionText, { color: colors.text }]}>{wl.name}</Text>
-              <Text style={[styles.listOptionCount, { color: colors.textTertiary }]}>{wl.items.length} 個景點</Text>
-            </TouchableOpacity>
-          ))}
-
-          {/* 新建清單 */}
           <TouchableOpacity
-            style={[styles.listOption, {
-              borderColor: selectedId === null ? colors.primary : colors.border,
-              backgroundColor: selectedId === null ? colors.primary + '15' : colors.surfaceSecondary,
-            }]}
-            onPress={() => setSelectedId(null)}
+            style={[styles.combobox, { borderColor: colors.border, backgroundColor: colors.surfaceSecondary }]}
+            onPress={() => setDropdownOpen(!dropdownOpen)}
             disabled={loading}
           >
-            <Text style={[styles.listOptionText, { color: colors.primary }]}>＋ 建立新清單</Text>
+            <Text style={[styles.comboboxText, { color: selectedId || newName.trim() ? colors.text : colors.textTertiary }]}>
+              {displayName}
+            </Text>
+            <Text style={[styles.comboboxArrow, { color: colors.textTertiary }]}>{dropdownOpen ? '▲' : '▼'}</Text>
           </TouchableOpacity>
+
+          {/* 下拉菜單 */}
+          {dropdownOpen && (
+            <View style={[styles.dropdown, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <FlatList
+                data={wishlists}
+                keyExtractor={w => w.id}
+                scrollEnabled={false}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[styles.dropdownItem, { borderBottomColor: colors.border }]}
+                    onPress={() => handleSelectWishlist(item.id)}
+                  >
+                    <View style={styles.dropdownItemContent}>
+                      <Text style={[styles.dropdownItemText, { color: colors.text }]}>{item.name}</Text>
+                      <Text style={[styles.dropdownItemCount, { color: colors.textTertiary }]}>{item.items.length}</Text>
+                    </View>
+                    {selectedId === item.id && <Text style={{ color: colors.primary }}>✓</Text>}
+                  </TouchableOpacity>
+                )}
+              />
+              <TouchableOpacity
+                style={[styles.dropdownItem, { paddingVertical: 12 }]}
+                onPress={() => handleSelectWishlist(null)}
+              >
+                <Text style={[styles.dropdownItemNew, { color: colors.primary }]}>＋ 建立新清單</Text>
+                {selectedId === null && newName.trim() && <Text style={{ color: colors.primary }}>✓</Text>}
+              </TouchableOpacity>
+            </View>
+          )}
 
           {selectedId === null && (
             <TextInput
@@ -175,9 +196,15 @@ const styles = StyleSheet.create({
   sheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },
   title: { fontSize: 18, fontWeight: '700', marginBottom: 16 },
   label: { fontSize: 13, fontWeight: '600', marginBottom: 8 },
-  listOption: { borderWidth: 1.5, borderRadius: 10, padding: 12, marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  listOptionText: { fontSize: 14, fontWeight: '600' },
-  listOptionCount: { fontSize: 12 },
+  combobox: { borderWidth: 1.5, borderRadius: 10, padding: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  comboboxText: { fontSize: 14, flex: 1 },
+  comboboxArrow: { fontSize: 12, marginLeft: 8 },
+  dropdown: { borderWidth: 1.5, borderRadius: 10, marginBottom: 12, maxHeight: 200 },
+  dropdownItem: { paddingVertical: 10, paddingHorizontal: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1 },
+  dropdownItemContent: { flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  dropdownItemText: { fontSize: 14, flex: 1 },
+  dropdownItemCount: { fontSize: 12 },
+  dropdownItemNew: { fontSize: 14, fontWeight: '600' },
   input: { borderWidth: 1.5, borderRadius: 10, padding: 12, fontSize: 14 },
   textArea: { borderWidth: 1.5, borderRadius: 10, padding: 12, fontSize: 14, height: 140 },
   hint: { fontSize: 12, marginTop: 8, lineHeight: 18 },
