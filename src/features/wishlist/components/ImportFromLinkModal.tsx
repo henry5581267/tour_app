@@ -104,35 +104,37 @@ export function ImportFromLinkModal({ visible, onClose }: Props) {
             <Text style={[styles.comboboxArrow, { color: colors.textTertiary }]}>{dropdownOpen ? '▲' : '▼'}</Text>
           </TouchableOpacity>
 
-          {/* 下拉菜單 */}
-          {dropdownOpen && (
-            <View style={[styles.dropdown, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <FlatList
-                data={wishlists}
-                keyExtractor={w => w.id}
-                scrollEnabled={false}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={[styles.dropdownItem, { borderBottomColor: colors.border }]}
-                    onPress={() => handleSelectWishlist(item.id)}
-                  >
-                    <View style={styles.dropdownItemContent}>
-                      <Text style={[styles.dropdownItemText, { color: colors.text }]}>{item.name}</Text>
-                      <Text style={[styles.dropdownItemCount, { color: colors.textTertiary }]}>{item.items.length}</Text>
-                    </View>
-                    {selectedId === item.id && <Text style={{ color: colors.primary }}>✓</Text>}
-                  </TouchableOpacity>
-                )}
-              />
-              <TouchableOpacity
-                style={[styles.dropdownItem, { paddingVertical: 12 }]}
-                onPress={() => handleSelectWishlist(null)}
-              >
-                <Text style={[styles.dropdownItemNew, { color: colors.primary }]}>＋ 建立新清單</Text>
-                {selectedId === null && newName.trim() && <Text style={{ color: colors.primary }}>✓</Text>}
-              </TouchableOpacity>
-            </View>
-          )}
+          {/* 下拉菜單 Modal */}
+          <Modal visible={dropdownOpen} transparent animationType="none" onRequestClose={() => setDropdownOpen(false)}>
+            <TouchableOpacity style={styles.dropdownOverlay} onPress={() => setDropdownOpen(false)}>
+              <View style={[styles.dropdownMenu, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <FlatList
+                  data={wishlists}
+                  keyExtractor={w => w.id}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={[styles.dropdownItem, { borderBottomColor: colors.border }]}
+                      onPress={() => handleSelectWishlist(item.id)}
+                    >
+                      <View style={styles.dropdownItemContent}>
+                        <Text style={[styles.dropdownItemText, { color: colors.text }]}>{item.name}</Text>
+                        <Text style={[styles.dropdownItemCount, { color: colors.textTertiary }]}>{item.items.length}</Text>
+                      </View>
+                      {selectedId === item.id && <Text style={{ color: colors.primary }}>✓</Text>}
+                    </TouchableOpacity>
+                  )}
+                  ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: colors.border }} />}
+                />
+                <TouchableOpacity
+                  style={[styles.dropdownItem, { paddingVertical: 12, borderBottomWidth: 0 }]}
+                  onPress={() => handleSelectWishlist(null)}
+                >
+                  <Text style={[styles.dropdownItemNew, { color: colors.primary }]}>＋ 建立新清單</Text>
+                  {selectedId === null && newName.trim() && <Text style={{ color: colors.primary }}>✓</Text>}
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </Modal>
 
           {selectedId === null && (
             <TextInput
@@ -199,8 +201,9 @@ const styles = StyleSheet.create({
   combobox: { borderWidth: 1.5, borderRadius: 10, padding: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   comboboxText: { fontSize: 14, flex: 1 },
   comboboxArrow: { fontSize: 12, marginLeft: 8 },
-  dropdown: { borderWidth: 1.5, borderRadius: 10, marginBottom: 12, maxHeight: 200 },
-  dropdownItem: { paddingVertical: 10, paddingHorizontal: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1 },
+  dropdownOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' },
+  dropdownMenu: { borderWidth: 1.5, borderRadius: 10, maxHeight: 350, width: '85%' },
+  dropdownItem: { paddingVertical: 10, paddingHorizontal: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   dropdownItemContent: { flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   dropdownItemText: { fontSize: 14, flex: 1 },
   dropdownItemCount: { fontSize: 12 },
