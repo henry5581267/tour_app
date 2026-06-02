@@ -21,6 +21,7 @@ export async function uploadWishlist(
   const batch = firestore().batch()
   batch.set(firestore().collection(WISHLISTS).doc(wishlist.id), {
     id: wishlist.id,
+    name: wishlist.name,
     inviteCode: code,
     items: wishlist.items,
     members: [deviceId],
