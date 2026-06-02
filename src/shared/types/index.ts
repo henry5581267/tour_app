@@ -1,6 +1,6 @@
 // src/shared/types/index.ts
 
-export type PlaceCategory = 'attraction' | 'restaurant' | 'activity'
+export type PlaceCategory = string
 
 export interface TripPlace {
   id: string

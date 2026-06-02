@@ -1,33 +1,26 @@
-import { PlaceCategory, PlaceSearchResult } from '../types'
+import { PlaceSearchResult } from '../types'
 import { GOOGLE_PLACES_API_KEY, PLACES_BASE_URL } from '../config'
 import { getCached, setCache } from '../storage/placesCache'
-
 
 function photoUrl(ref: string): string {
   return `${PLACES_BASE_URL}/photo?maxwidth=800&photo_reference=${ref}&key=${GOOGLE_PLACES_API_KEY}`
 }
 
-const RESTAURANT_TYPES = new Set([
-  'restaurant', 'food', 'cafe', 'bar', 'bakery', 'meal_takeaway',
-  'meal_delivery', 'night_club', 'liquor_store',
-])
-const ACTIVITY_TYPES = new Set([
-  'amusement_park', 'gym', 'stadium', 'bowling_alley', 'casino',
-  'movie_theater', 'spa', 'aquarium', 'zoo',
-  'bank', 'atm', 'finance', 'hospital', 'pharmacy', 'doctor',
-  'gas_station', 'car_rental', 'bus_station', 'train_station',
-  'subway_station', 'airport', 'transit_station',
-  'convenience_store', 'supermarket', 'shopping_mall', 'store',
-  'department_store', 'clothing_store', 'electronics_store',
+// Generic types that are too broad to be useful
+const SKIP_TYPES = new Set([
+  'establishment', 'point_of_interest', 'political', 'locality',
+  'sublocality', 'sublocality_level_1', 'neighborhood', 'premise',
+  'street_address', 'route', 'country', 'administrative_area_level_1',
+  'administrative_area_level_2', 'administrative_area_level_3',
+  'colloquial_area', 'natural_feature',
 ])
 
-function inferCategory(types: string[]): PlaceCategory {
-  if (types.some(t => RESTAURANT_TYPES.has(t))) return 'restaurant'
-  if (types.some(t => ACTIVITY_TYPES.has(t))) return 'activity'
-  return 'attraction'
+function pickBestType(types: string[]): string {
+  const specific = types.filter(t => !SKIP_TYPES.has(t))
+  return specific[0] ?? types[0] ?? 'establishment'
 }
 
-function mapResult(item: any, fallbackCategory: PlaceCategory): PlaceSearchResult | null {
+function mapResult(item: any): PlaceSearchResult | null {
   if (!item.geometry?.location) return null
   return {
     googlePlaceId: item.place_id,
@@ -39,15 +32,15 @@ function mapResult(item: any, fallbackCategory: PlaceCategory): PlaceSearchResul
       ? photoUrl(item.photos[0].photo_reference)
       : '',
     rating: item.rating,
-    category: item.types?.length ? inferCategory(item.types) : fallbackCategory,
+    category: item.types?.length ? pickBestType(item.types) : 'establishment',
   }
 }
 
 export async function searchPlaces(
   query: string,
-  category: PlaceCategory
+  _category?: string,
 ): Promise<PlaceSearchResult[]> {
-  const cacheKey = `${query}:${category}`
+  const cacheKey = query
   const cached = await getCached<PlaceSearchResult[]>(cacheKey)
   if (cached) return cached
 
@@ -59,14 +52,14 @@ export async function searchPlaces(
     throw new Error(`Places API: ${data.status}`)
   }
   const results: PlaceSearchResult[] = (data.results ?? [])
-    .map((r: any) => mapResult(r, category))
+    .map((r: any) => mapResult(r))
     .filter((r): r is PlaceSearchResult => r !== null)
   await setCache(cacheKey, results)
   return results
 }
 
 export async function getPlaceDetails(
-  placeId: string
+  placeId: string,
 ): Promise<{ openingHours?: string }> {
   const url = `${PLACES_BASE_URL}/details/json?place_id=${placeId}&fields=opening_hours&key=${GOOGLE_PLACES_API_KEY}`
   const res = await fetch(url)
