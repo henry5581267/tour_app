@@ -7,7 +7,22 @@ function photoUrl(ref: string): string {
   return `${PLACES_BASE_URL}/photo?maxwidth=800&photo_reference=${ref}&key=${GOOGLE_PLACES_API_KEY}`
 }
 
-function mapResult(item: any, category: PlaceCategory): PlaceSearchResult | null {
+const RESTAURANT_TYPES = new Set([
+  'restaurant', 'food', 'cafe', 'bar', 'bakery', 'meal_takeaway',
+  'meal_delivery', 'night_club', 'liquor_store',
+])
+const ACTIVITY_TYPES = new Set([
+  'amusement_park', 'gym', 'stadium', 'bowling_alley', 'casino',
+  'movie_theater', 'spa', 'aquarium', 'zoo',
+])
+
+function inferCategory(types: string[]): PlaceCategory {
+  if (types.some(t => RESTAURANT_TYPES.has(t))) return 'restaurant'
+  if (types.some(t => ACTIVITY_TYPES.has(t))) return 'activity'
+  return 'attraction'
+}
+
+function mapResult(item: any, fallbackCategory: PlaceCategory): PlaceSearchResult | null {
   if (!item.geometry?.location) return null
   return {
     googlePlaceId: item.place_id,
@@ -19,7 +34,7 @@ function mapResult(item: any, category: PlaceCategory): PlaceSearchResult | null
       ? photoUrl(item.photos[0].photo_reference)
       : '',
     rating: item.rating,
-    category,
+    category: item.types?.length ? inferCategory(item.types) : fallbackCategory,
   }
 }
 
