@@ -1,6 +1,10 @@
 # Claude Code
 .claude/settings.local.json
 
+# Firebase - contains API keys, do not commit
+android/app/google-services.json
+ios/GoogleService-Info.plist
+
 # OSX
 #
 .DS_Store
