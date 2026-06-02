@@ -7,6 +7,7 @@ import {
 import { Trip, TripPlace } from '../../../shared/types'
 import { useItineraryStore } from '../store'
 import { useTheme } from '../../../shared/theme/ThemeContext'
+import { CreateTripModal } from './CreateTripModal'
 
 interface Props {
   visible: boolean
@@ -55,9 +56,11 @@ export function AddToTripModal({ visible, place, onClose, onAdded }: Props) {
   const { colors } = useTheme()
   const trips = useItineraryStore(s => s.trips)
   const addPlaceToTrip = useItineraryStore(s => s.addPlaceToTrip)
+  const createTrip = useItineraryStore(s => s.createTrip)
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null)
   const [selectedDay, setSelectedDay] = useState<number>(0)
   const [step, setStep] = useState<'trip' | 'day'>('trip')
+  const [showCreate, setShowCreate] = useState(false)
 
   const handleSelectTrip = (trip: Trip) => {
     setSelectedTrip(trip)
@@ -95,7 +98,15 @@ export function AddToTripModal({ visible, place, onClose, onAdded }: Props) {
               data={trips}
               keyExtractor={t => t.id}
               ListEmptyComponent={
-                <Text style={[styles.empty, { color: colors.textSecondary }]}>尚無行程，請先建立行程</Text>
+                <View style={styles.emptyContainer}>
+                  <Text style={[styles.empty, { color: colors.textSecondary }]}>尚無行程</Text>
+                  <TouchableOpacity
+                    style={[styles.createBtn, { backgroundColor: colors.primary }]}
+                    onPress={() => setShowCreate(true)}
+                  >
+                    <Text style={styles.createBtnText}>＋ 現在新增</Text>
+                  </TouchableOpacity>
+                </View>
               }
               renderItem={({ item }) => (
                 <TouchableOpacity
@@ -172,6 +183,14 @@ export function AddToTripModal({ visible, place, onClose, onAdded }: Props) {
 
         </SafeAreaView>
       </View>
+      <CreateTripModal
+        visible={showCreate}
+        onClose={() => setShowCreate(false)}
+        onCreate={async (name, days) => {
+          await createTrip(name, days)
+          setShowCreate(false)
+        }}
+      />
     </Modal>
   )
 }
@@ -193,7 +212,10 @@ const styles = StyleSheet.create({
   tripName: { fontSize: 16, fontWeight: '700' },
   tripMeta: { fontSize: 13, marginTop: 2 },
   tripArrow: { fontSize: 22, fontWeight: '300' },
-  empty: { textAlign: 'center', marginTop: 40, fontSize: 14 },
+  emptyContainer: { alignItems: 'center', marginTop: 40 },
+  empty: { fontSize: 14, marginBottom: 16 },
+  createBtn: { borderRadius: 12, paddingVertical: 12, paddingHorizontal: 32 },
+  createBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
 
   // Day grid
   sectionTitle: { fontSize: 13, fontWeight: '600', paddingHorizontal: 20, paddingBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
