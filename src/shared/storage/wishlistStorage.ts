@@ -1,23 +1,23 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Wishlist } from '../types'
 
-const WISHLIST_KEY = '@tourapp/wishlist'
+const KEY = '@tourapp/wishlists'
 
-export async function getWishlist(): Promise<Wishlist | null> {
+export async function getWishlists(): Promise<Wishlist[]> {
   try {
-    const json = await AsyncStorage.getItem(WISHLIST_KEY)
-    if (!json) return null
-    return JSON.parse(json) as Wishlist
+    const json = await AsyncStorage.getItem(KEY)
+    if (!json) return []
+    return JSON.parse(json) as Wishlist[]
   } catch (err) {
-    console.error('Failed to load wishlist:', err)
-    return null
+    console.error('Failed to load wishlists:', err)
+    return []
   }
 }
 
-export async function saveWishlist(wishlist: Wishlist): Promise<void> {
+export async function saveWishlists(lists: Wishlist[]): Promise<void> {
   try {
-    await AsyncStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist))
+    await AsyncStorage.setItem(KEY, JSON.stringify(lists))
   } catch (err) {
-    console.error('Failed to save wishlist:', err)
+    console.error('Failed to save wishlists:', err)
   }
 }

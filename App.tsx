@@ -9,7 +9,7 @@ function Root() {
   const loadTrips = useItineraryStore(s => s.loadTrips)
   useEffect(() => {
     loadTrips()
-    useWishlistStore.getState().loadWishlist()
+    useWishlistStore.getState().loadWishlists()
   }, [])
   return <AppNavigator />
 }

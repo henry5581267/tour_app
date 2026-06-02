@@ -16,7 +16,8 @@ interface Props {
 
 export function AITripModal({ visible, onClose, onSuccess }: Props) {
   const { colors } = useTheme()
-  const wishlistItems = useWishlistStore(s => s.wishlist.items)
+  const wishlists = useWishlistStore(s => s.wishlists)
+  const wishlistItems = wishlists.flatMap(w => w.items)
   const [useWishlist, setUseWishlist] = useState(false)
   const [destination, setDestination] = useState('')
   const [days, setDays] = useState(3)

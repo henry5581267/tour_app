@@ -54,6 +54,7 @@ export interface WishlistItem {
 
 export interface Wishlist {
   id: string
+  name: string
   items: WishlistItem[]
   isShared: boolean
   inviteCode?: string
@@ -83,6 +84,7 @@ export type RootStackParamList = {
   PlaceDetail: { place: PlaceSearchResult }
   ItineraryDetail: { tripId: string }
   AITripPreview: { itinerary: GeneratedItinerary }
+  WishlistDetail: { wishlistId: string }
 }
 
 export type TabParamList = {

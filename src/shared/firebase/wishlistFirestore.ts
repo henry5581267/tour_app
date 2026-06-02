@@ -34,7 +34,7 @@ export async function uploadWishlist(
 
 export async function fetchWishlistByCode(
   code: string,
-): Promise<{ id: string; items: WishlistItem[] } | null> {
+): Promise<{ id: string; name?: string; items: WishlistItem[] } | null> {
   const upperCode = code.toUpperCase()
   const codeSnap = await firestore()
     .collection(WISHLIST_INVITE_CODES)
@@ -49,8 +49,8 @@ export async function fetchWishlistByCode(
     .get()
   if (!wishlistSnap.exists) return null
 
-  const data = (wishlistSnap as any).data() as { id: string; items: WishlistItem[] }
-  return { id: data.id, items: data.items ?? [] }
+  const data = (wishlistSnap as any).data() as { id: string; name?: string; items: WishlistItem[] }
+  return { id: data.id, name: data.name, items: data.items ?? [] }
 }
 
 export async function addWishlistMember(
