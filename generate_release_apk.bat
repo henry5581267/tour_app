@@ -1,9 +1,18 @@
 @echo off
 set ROOT=%~dp0
-set APK_SRC=%ROOT%android\app\build\outputs\apk\release\app-release.apk
 
-:: Get git short hash for version
-for /f "tokens=*" %%i in ('git -C "%ROOT%" rev-parse --short HEAD') do set GIT_HASH=%%i
+:: Remove trailing backslash from ROOT for git -C
+set ROOTDIR=%ROOT:~0,-1%
+
+:: Get git short hash
+for /f "tokens=*" %%i in ('git -C "%ROOTDIR%" rev-parse --short HEAD 2^>nul') do set GIT_HASH=%%i
+
+if "%GIT_HASH%"=="" (
+    echo WARNING: Could not get git hash, using 'unknown'
+    set GIT_HASH=unknown
+)
+
+set APK_SRC=%ROOT%android\app\build\outputs\apk\release\app-release.apk
 set APK_NAME=tour_app-%GIT_HASH%.apk
 set APK_DST=%ROOT%release\%APK_NAME%
 
