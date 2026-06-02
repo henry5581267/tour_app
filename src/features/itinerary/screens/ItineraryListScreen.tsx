@@ -88,15 +88,7 @@ export function ItineraryListScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {trips.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <EmptyState message="尚無行程" subtext="點擊下方按鈕建立第一個旅遊行程" />
-          <TouchableOpacity
-            style={[styles.emptyCreateBtn, { backgroundColor: colors.primary }]}
-            onPress={() => setShowCreate(true)}
-          >
-            <Text style={styles.emptyCreateBtnText}>＋ 現在新增</Text>
-          </TouchableOpacity>
-        </View>
+        <EmptyState message="尚無行程" subtext="點擊 + 建立第一個旅遊行程" />
       ) : (
         <FlatList
           data={trips}
@@ -185,9 +177,6 @@ export function ItineraryListScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 },
-  emptyCreateBtn: { marginTop: 24, borderRadius: 14, paddingVertical: 14, paddingHorizontal: 40 },
-  emptyCreateBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
   list: { padding: 16, paddingBottom: 100 },
   card: {
     borderRadius: 14, padding: 16, marginBottom: 12, borderWidth: 1,
