@@ -14,6 +14,11 @@ const RESTAURANT_TYPES = new Set([
 const ACTIVITY_TYPES = new Set([
   'amusement_park', 'gym', 'stadium', 'bowling_alley', 'casino',
   'movie_theater', 'spa', 'aquarium', 'zoo',
+  'bank', 'atm', 'finance', 'hospital', 'pharmacy', 'doctor',
+  'gas_station', 'car_rental', 'bus_station', 'train_station',
+  'subway_station', 'airport', 'transit_station',
+  'convenience_store', 'supermarket', 'shopping_mall', 'store',
+  'department_store', 'clothing_store', 'electronics_store',
 ])
 
 function inferCategory(types: string[]): PlaceCategory {
