@@ -7,7 +7,7 @@ import { RootStackParamList } from '../../../shared/types'
 import { useWishlistStore } from '../store'
 import { CreateWishlistModal } from '../components/CreateWishlistModal'
 import { JoinWishlistModal } from '../components/JoinWishlistModal'
-import { ImportGoogleMapsModal } from '../components/ImportGoogleMapsModal'
+import { ImportFromLinkModal } from '../components/ImportFromLinkModal'
 import { EmptyState } from '../../../shared/components/EmptyState'
 import { useTheme } from '../../../shared/theme/ThemeContext'
 
@@ -111,13 +111,9 @@ export function WishlistScreen() {
         onClose={() => setShowJoin(false)}
         onSuccess={() => setShowJoin(false)}
       />
-      <ImportGoogleMapsModal
+      <ImportFromLinkModal
         visible={showImport}
         onClose={() => setShowImport(false)}
-        onSuccess={(count) => {
-          setShowImport(false)
-          Alert.alert('匯入成功', `已建立 ${count} 個收藏清單`)
-        }}
       />
     </SafeAreaView>
   )
