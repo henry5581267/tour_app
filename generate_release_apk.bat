@@ -30,7 +30,16 @@ if not exist "%ROOT%release" mkdir "%ROOT%release"
 copy "%APK_SRC%" "%APK_DST%"
 if errorlevel 1 (
     echo Copy FAILED - source: %APK_SRC%
+    pause
+    exit /b 1
+)
+echo Done: %APK_DST%
+
+echo [3/3] Uploading to Google Drive...
+rclone copy "%APK_DST%" gdrive:TourApp --progress
+if errorlevel 1 (
+    echo Upload FAILED
 ) else (
-    echo Done: %APK_DST%
+    echo Uploaded: gdrive:TourApp/%APK_NAME%
 )
 pause
