@@ -13,7 +13,6 @@ import { useTheme } from '../../../shared/theme/ThemeContext'
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Tabs'>
 
-const ALL_CATEGORIES: PlaceCategory[] = ['attraction', 'restaurant', 'activity']
 
 export function PlacesScreen() {
   const navigation = useNavigation<Nav>()
@@ -28,14 +27,15 @@ export function PlacesScreen() {
     setLoading(true)
     setError(null)
     try {
-      const allResults = await Promise.allSettled(
-        ALL_CATEGORIES.map(cat => searchPlaces(query.trim(), cat))
-      )
-      const combined: PlaceSearchResult[] = allResults.flatMap(r =>
-        r.status === 'fulfilled' ? r.value : []
-      )
-      combined.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
-      setResults(combined)
+      const raw = await searchPlaces(query.trim(), 'attraction')
+      const seen = new Set<string>()
+      const deduped = raw.filter(r => {
+        if (seen.has(r.googlePlaceId)) return false
+        seen.add(r.googlePlaceId)
+        return true
+      })
+      deduped.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
+      setResults(deduped)
     } catch {
       setError('搜尋失敗，請檢查網路連線')
       setResults([])
