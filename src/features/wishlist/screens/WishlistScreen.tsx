@@ -1,9 +1,12 @@
 import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { FlatList, View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native'
+import {
+  FlatList, View, Text, TouchableOpacity, StyleSheet,
+  Alert, Modal, TextInput,
+} from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { RootStackParamList } from '../../../shared/types'
+import { RootStackParamList, Wishlist } from '../../../shared/types'
 import { useWishlistStore } from '../store'
 import { CreateWishlistModal } from '../components/CreateWishlistModal'
 import { JoinWishlistModal } from '../components/JoinWishlistModal'
@@ -24,43 +27,47 @@ export function WishlistScreen() {
   const [showCreate, setShowCreate] = useState(false)
   const [showJoin, setShowJoin] = useState(false)
   const [showImport, setShowImport] = useState(false)
+  const [renameTarget, setRenameTarget] = useState<Wishlist | null>(null)
+  const [renameText, setRenameText] = useState('')
 
-  const handleLongPress = (id: string, name: string, isShared: boolean, inviteCode?: string) => {
-    const canDelete = !isShared || !!inviteCode
-    const actions = [
+  const handleRename = async () => {
+    if (!renameTarget || !renameText.trim()) return
+    await renameWishlist(renameTarget.id, renameText.trim())
+    setRenameTarget(null)
+  }
+
+  const handleLongPress = (wl: Wishlist) => {
+    const canDelete = !wl.isShared || !!wl.inviteCode
+    const actions: any[] = [
       {
         text: '重新命名',
-        onPress: () => {
-          Alert.prompt('重新命名', '', (text) => {
-            if (text?.trim()) renameWishlist(id, text.trim())
-          }, 'plain-text', name)
-        },
+        onPress: () => { setRenameText(wl.name); setRenameTarget(wl) },
       },
     ]
     if (canDelete) {
       actions.push({
         text: '刪除',
-        style: 'destructive' as const,
+        style: 'destructive',
         onPress: () =>
-          Alert.alert('刪除清單', `確定刪除「${name}」？`, [
+          Alert.alert('刪除清單', `確定刪除「${wl.name}」？`, [
             { text: '取消', style: 'cancel' },
-            { text: '刪除', style: 'destructive', onPress: () => deleteWishlist(id) },
+            { text: '刪除', style: 'destructive', onPress: () => deleteWishlist(wl.id) },
           ]),
       })
     }
-    if (isShared && !inviteCode) {
+    if (wl.isShared && !wl.inviteCode) {
       actions.push({
         text: '離開清單',
-        style: 'destructive' as const,
+        style: 'destructive',
         onPress: () =>
-          Alert.alert('離開清單', `確定離開「${name}」？`, [
+          Alert.alert('離開清單', `確定離開「${wl.name}」？`, [
             { text: '取消', style: 'cancel' },
-            { text: '離開', style: 'destructive', onPress: () => deleteWishlist(id) },
+            { text: '離開', style: 'destructive', onPress: () => deleteWishlist(wl.id) },
           ]),
       })
     }
-    actions.push({ text: '取消', style: 'cancel' as const })
-    Alert.alert(name, '', actions)
+    actions.push({ text: '取消', style: 'cancel' })
+    Alert.alert(wl.name, '', actions)
   }
 
   return (
@@ -73,7 +80,7 @@ export function WishlistScreen() {
           <TouchableOpacity
             style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => navigation.navigate('WishlistDetail', { wishlistId: wl.id })}
-            onLongPress={() => handleLongPress(wl.id, wl.name, wl.isShared, wl.inviteCode)}
+            onLongPress={() => handleLongPress(wl)}
           >
             <View style={styles.cardTop}>
               <Text style={[styles.cardName, { color: colors.text }]}>
@@ -129,6 +136,41 @@ export function WishlistScreen() {
         visible={showImport}
         onClose={() => setShowImport(false)}
       />
+
+      {/* 重新命名 Modal */}
+      <Modal
+        visible={!!renameTarget}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRenameTarget(null)}
+      >
+        <View style={styles.renameOverlay}>
+          <View style={[styles.renameSheet, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.renameTitle, { color: colors.text }]}>重新命名</Text>
+            <TextInput
+              style={[styles.renameInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surfaceSecondary }]}
+              value={renameText}
+              onChangeText={setRenameText}
+              autoFocus
+              selectTextOnFocus
+              placeholder="輸入新名稱"
+              placeholderTextColor={colors.textTertiary}
+            />
+            <View style={styles.renameBtns}>
+              <TouchableOpacity style={styles.renameCancelBtn} onPress={() => setRenameTarget(null)}>
+                <Text style={[styles.renameCancelText, { color: colors.textSecondary }]}>取消</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.renameConfirmBtn, { backgroundColor: renameText.trim() ? colors.primary : colors.surfaceSecondary }]}
+                onPress={handleRename}
+                disabled={!renameText.trim()}
+              >
+                <Text style={[styles.renameConfirmText, { color: renameText.trim() ? '#fff' : colors.textTertiary }]}>確定</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   )
 }
@@ -149,4 +191,13 @@ const styles = StyleSheet.create({
   importBtnText: { fontSize: 13, fontWeight: '600' },
   createBtn: { flex: 2, borderRadius: 12, paddingVertical: 13, alignItems: 'center' },
   createText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  renameOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 32 },
+  renameSheet: { width: '100%', borderRadius: 20, padding: 24 },
+  renameTitle: { fontSize: 18, fontWeight: '700', marginBottom: 16 },
+  renameInput: { borderWidth: 1.5, borderRadius: 10, padding: 12, fontSize: 15, marginBottom: 20 },
+  renameBtns: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12 },
+  renameCancelBtn: { padding: 10 },
+  renameCancelText: { fontSize: 15 },
+  renameConfirmBtn: { borderRadius: 10, paddingHorizontal: 24, paddingVertical: 10 },
+  renameConfirmText: { fontWeight: '700', fontSize: 15 },
 })
