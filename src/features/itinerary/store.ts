@@ -10,6 +10,7 @@ import {
   uploadTrip, fetchTripByCode, addMember, removeMember,
   updateSharedTrip, subscribeToTrip,
   acquireDayLockTransaction, releaseDayLockInFirestore,
+  deleteTrip as deleteFirebaseTrip,
   FirestoreTrip,
 } from '../../shared/firebase/tripsFirestore'
 
@@ -82,10 +83,19 @@ export const useItineraryStore = create<ItineraryState>((set, get) => ({
   removeTrip: async (id) => {
     const trip = get().trips.find(t => t.id === id)
     if (!trip) return
-    if (trip.isShared) { await get().leaveTrip(id); return }
-    await deleteTrip(id)
-    const idx = _localTrips.findIndex(t => t.id === id)
-    if (idx >= 0) _localTrips.splice(idx, 1)
+    if (trip.isShared) {
+      if (trip.inviteCode) {
+        await deleteFirebaseTrip(id, trip.inviteCode)
+        if (_listeners[id]) { _listeners[id](); delete _listeners[id] }
+        _sharedTrips.delete(id)
+      } else {
+        await get().leaveTrip(id)
+      }
+    } else {
+      await deleteTrip(id)
+      const idx = _localTrips.findIndex(t => t.id === id)
+      if (idx >= 0) _localTrips.splice(idx, 1)
+    }
     set({ trips: _merged() })
   },
 
@@ -247,6 +257,7 @@ export const useItineraryStore = create<ItineraryState>((set, get) => ({
         days: ft.days,
         createdAt: ft.createdAt,
         isShared: true,
+        inviteCode: ft.inviteCode,
         tripDays: ft.tripDays.map(d => ({ dayIndex: d.dayIndex, places: d.places })),
       }
       const newLocks: Record<string, DayLock | null> = {}

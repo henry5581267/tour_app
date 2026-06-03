@@ -143,3 +143,11 @@ export async function releaseDayLockInFirestore(
     tx.update(ref, { tripDays: days })
   })
 }
+
+
+export async function deleteTrip(tripId: string, inviteCode: string): Promise<void> {
+  const batch = firestore().batch()
+  batch.delete(firestore().collection(TRIPS).doc(tripId))
+  batch.delete(firestore().collection(INVITE_CODES).doc(inviteCode))
+  await batch.commit()
+}

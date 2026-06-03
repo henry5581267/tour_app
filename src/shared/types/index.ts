@@ -26,6 +26,7 @@ export interface Trip {
   days: number
   createdAt: string
   isShared: boolean
+  inviteCode?: string
   tripDays: TripDay[]
 }
 

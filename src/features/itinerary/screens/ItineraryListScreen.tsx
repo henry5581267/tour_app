@@ -35,7 +35,9 @@ export function ItineraryListScreen() {
   const [showAI, setShowAI] = useState(false)
 
   const handleLongPress = (item: Trip) => {
-    Alert.alert(item.name, '', [
+    const isCreator = item.isShared && !!item.inviteCode
+    const isMember = item.isShared && !item.inviteCode
+    const actions = [
       {
         text: item.isShared ? '顯示邀請碼' : '分享行程',
         onPress: () => handleShare(item),
@@ -44,21 +46,39 @@ export function ItineraryListScreen() {
         text: '更名',
         onPress: () => { setRenameText(item.name); setRenameTarget(item) },
       },
-      {
-        text: item.isShared ? '離開行程' : '刪除',
-        style: 'destructive',
+    ]
+    if (!item.isShared || isCreator) {
+      actions.push({
+        text: '刪除',
+        style: 'destructive' as const,
         onPress: () =>
           Alert.alert(
-            item.isShared ? '離開行程' : '刪除行程',
-            item.isShared ? `確定離開「${item.name}」？` : `確定刪除「${item.name}」？`,
+            '刪除行程',
+            `確定刪除「${item.name}」？`,
             [
               { text: '取消', style: 'cancel' },
-              { text: item.isShared ? '離開' : '刪除', style: 'destructive', onPress: () => removeTrip(item.id) },
+              { text: '刪除', style: 'destructive', onPress: () => removeTrip(item.id) },
             ]
           ),
-      },
-      { text: '取消', style: 'cancel' },
-    ])
+      })
+    }
+    if (isMember) {
+      actions.push({
+        text: '離開行程',
+        style: 'destructive' as const,
+        onPress: () =>
+          Alert.alert(
+            '離開行程',
+            `確定離開「${item.name}」？`,
+            [
+              { text: '取消', style: 'cancel' },
+              { text: '離開', style: 'destructive', onPress: () => removeTrip(item.id) },
+            ]
+          ),
+      })
+    }
+    actions.push({ text: '取消', style: 'cancel' as const })
+    Alert.alert(item.name, '', actions)
   }
 
   const handleShare = async (item: Trip) => {
