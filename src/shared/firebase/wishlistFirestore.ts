@@ -80,9 +80,13 @@ export async function removeWishlistMember(
 
 export async function updateSharedWishlist(
   wishlistId: string,
-  items: WishlistItem[],
+  items?: WishlistItem[],
+  name?: string,
 ): Promise<void> {
-  await firestore().collection('wishlists').doc(wishlistId).update({ items })
+  const update: Record<string, any> = {}
+  if (items) update.items = items
+  if (name) update.name = name
+  await firestore().collection('wishlists').doc(wishlistId).update(update)
 }
 
 export function subscribeToWishlist(

@@ -64,7 +64,13 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
   },
 
   renameWishlist: async (id, name) => {
-    _localWishlists = _localWishlists.map(w => w.id === id ? { ...w, name } : w)
+    const shared = _sharedWishlists.get(id)
+    if (shared) {
+      _sharedWishlists.set(id, { ...shared, name })
+      await updateSharedWishlist(id, undefined, name)
+    } else {
+      _localWishlists = _localWishlists.map(w => w.id === id ? { ...w, name } : w)
+    }
     set({ wishlists: _merged() })
     await saveWishlists(_merged())
   },
