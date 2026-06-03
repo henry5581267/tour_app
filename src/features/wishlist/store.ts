@@ -2,9 +2,13 @@ import { create } from 'zustand'
 import { Wishlist, WishlistItem, PlaceSearchResult } from '../../shared/types'
 import { getWishlists, saveWishlists } from '../../shared/storage/wishlistStorage'
 import {
-  uploadWishlist, fetchWishlistByCode,
-  addWishlistMember, removeWishlistMember,
-  updateSharedWishlist, subscribeToWishlist, deleteWishlist: deleteWishlistFirebase,
+  uploadWishlist,
+  fetchWishlistByCode,
+  addWishlistMember,
+  removeWishlistMember,
+  updateSharedWishlist,
+  subscribeToWishlist,
+  deleteWishlist as deleteWishlistFirebase,
 } from '../../shared/firebase/wishlistFirestore'
 import { getDeviceId } from '../../shared/firebase/deviceId'
 
