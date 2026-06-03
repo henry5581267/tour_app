@@ -11,6 +11,7 @@ import { useWishlistStore } from '../store'
 import { CreateWishlistModal } from '../components/CreateWishlistModal'
 import { JoinWishlistModal } from '../components/JoinWishlistModal'
 import { ImportFromLinkModal } from '../components/ImportFromLinkModal'
+import { ShareWishlistModal } from '../components/ShareWishlistModal'
 import { EmptyState } from '../../../shared/components/EmptyState'
 import { useTheme } from '../../../shared/theme/ThemeContext'
 
@@ -29,6 +30,7 @@ export function WishlistScreen() {
   const [showImport, setShowImport] = useState(false)
   const [renameTarget, setRenameTarget] = useState<Wishlist | null>(null)
   const [renameText, setRenameText] = useState('')
+  const [shareCode, setShareCode] = useState<string | null>(null)
 
   const handleRename = async () => {
     if (!renameTarget || !renameText.trim()) return
@@ -37,16 +39,21 @@ export function WishlistScreen() {
   }
 
   const handleLongPress = (wl: Wishlist) => {
-    const canDelete = !wl.isShared || !!wl.inviteCode
+    const isCreator = wl.isShared && !!wl.inviteCode
+    const isMember = wl.isShared && !wl.inviteCode
     const actions: any[] = [
       {
         text: '重新命名',
         onPress: () => { setRenameText(wl.name); setRenameTarget(wl) },
       },
     ]
-    if (canDelete) {
+    if (isCreator) {
       actions.push({
-        text: '刪除',
+        text: '顯示邀請碼',
+        onPress: () => setShareCode(wl.inviteCode!),
+      })
+      actions.push({
+        text: '刪除清單',
         style: 'destructive',
         onPress: () =>
           Alert.alert('刪除清單', `確定刪除「${wl.name}」？`, [
@@ -55,7 +62,7 @@ export function WishlistScreen() {
           ]),
       })
     }
-    if (wl.isShared && !wl.inviteCode) {
+    if (isMember) {
       actions.push({
         text: '離開清單',
         style: 'destructive',
@@ -63,6 +70,17 @@ export function WishlistScreen() {
           Alert.alert('離開清單', `確定離開「${wl.name}」？`, [
             { text: '取消', style: 'cancel' },
             { text: '離開', style: 'destructive', onPress: () => deleteWishlist(wl.id) },
+          ]),
+      })
+    }
+    if (!wl.isShared) {
+      actions.push({
+        text: '刪除清單',
+        style: 'destructive',
+        onPress: () =>
+          Alert.alert('刪除清單', `確定刪除「${wl.name}」？`, [
+            { text: '取消', style: 'cancel' },
+            { text: '刪除', style: 'destructive', onPress: () => deleteWishlist(wl.id) },
           ]),
       })
     }
@@ -135,6 +153,11 @@ export function WishlistScreen() {
       <ImportFromLinkModal
         visible={showImport}
         onClose={() => setShowImport(false)}
+      />
+      <ShareWishlistModal
+        visible={shareCode !== null}
+        inviteCode={shareCode ?? ''}
+        onClose={() => setShareCode(null)}
       />
 
       {/* 重新命名 Modal */}

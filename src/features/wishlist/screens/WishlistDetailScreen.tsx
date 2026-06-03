@@ -116,21 +116,11 @@ export function WishlistDetailScreen({ route, navigation }: Props) {
         contentContainerStyle={wishlist.items.length === 0 ? styles.emptyFlex : undefined}
       />
 
-      {!selectMode && (
+      {!selectMode && !wishlist.isShared && (
         <View style={[styles.footer, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
-          {wishlist.isShared && !wishlist.inviteCode ? (
-            // 被分享者：離開清單
-            <TouchableOpacity style={[styles.btn, { borderColor: colors.danger, borderWidth: 1.5 }]} onPress={handleLeave}>
-              <Text style={[styles.btnText, { color: colors.danger }]}>離開清單</Text>
-            </TouchableOpacity>
-          ) : (
-            // 本地清單 or 建立者：顯示分享 / 重新顯示邀請碼
-            <TouchableOpacity style={[styles.btn, { backgroundColor: colors.primary }]} onPress={handleShare}>
-              <Text style={[styles.btnText, { color: '#fff' }]}>
-                {wishlist.isShared ? '邀請碼 📤' : '分享清單 📤'}
-              </Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity style={[styles.btn, { backgroundColor: colors.primary }]} onPress={handleShare}>
+            <Text style={[styles.btnText, { color: '#fff' }]}>分享清單 📤</Text>
+          </TouchableOpacity>
         </View>
       )}
 
