@@ -4,7 +4,7 @@ import { getWishlists, saveWishlists } from '../../shared/storage/wishlistStorag
 import {
   uploadWishlist, fetchWishlistByCode,
   addWishlistMember, removeWishlistMember,
-  updateSharedWishlist, subscribeToWishlist,
+  updateSharedWishlist, subscribeToWishlist, deleteWishlist: deleteWishlistFirebase,
 } from '../../shared/firebase/wishlistFirestore'
 import { getDeviceId } from '../../shared/firebase/deviceId'
 
@@ -58,7 +58,14 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
   },
 
   deleteWishlist: async (id) => {
-    _localWishlists = _localWishlists.filter(w => w.id !== id)
+    const shared = _sharedWishlists.get(id)
+    if (shared) {
+      _sharedWishlists.delete(id)
+      if (_listeners[id]) { _listeners[id](); delete _listeners[id] }
+      await deleteWishlistFirebase(id, shared.inviteCode)
+    } else {
+      _localWishlists = _localWishlists.filter(w => w.id !== id)
+    }
     set({ wishlists: _merged() })
     await saveWishlists(_merged())
   },

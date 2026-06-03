@@ -89,6 +89,18 @@ export async function updateSharedWishlist(
   await firestore().collection('wishlists').doc(wishlistId).update(update)
 }
 
+export async function deleteWishlist(
+  wishlistId: string,
+  inviteCode?: string,
+): Promise<void> {
+  const batch = firestore().batch()
+  batch.delete(firestore().collection(WISHLISTS).doc(wishlistId))
+  if (inviteCode) {
+    batch.delete(firestore().collection(WISHLIST_INVITE_CODES).doc(inviteCode.toUpperCase()))
+  }
+  await batch.commit()
+}
+
 export function subscribeToWishlist(
   wishlistId: string,
   onUpdate: (data: { id: string; name: string; items: WishlistItem[] } | null) => void,

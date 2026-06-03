@@ -25,8 +25,9 @@ export function WishlistScreen() {
   const [showJoin, setShowJoin] = useState(false)
   const [showImport, setShowImport] = useState(false)
 
-  const handleLongPress = (id: string, name: string, isShared: boolean) => {
-    Alert.alert(name, '', [
+  const handleLongPress = (id: string, name: string, isShared: boolean, inviteCode?: string) => {
+    const canDelete = !isShared || !!inviteCode
+    const actions = [
       {
         text: '重新命名',
         onPress: () => {
@@ -35,18 +36,31 @@ export function WishlistScreen() {
           }, 'plain-text', name)
         },
       },
-      !isShared
-        ? {
-            text: '刪除',
-            style: 'destructive',
-            onPress: () =>
-              Alert.alert('刪除清單', `確定刪除「${name}」？`, [
-                { text: '取消', style: 'cancel' },
-                { text: '刪除', style: 'destructive', onPress: () => deleteWishlist(id) },
-              ]),
-          }
-        : { text: '取消', style: 'cancel' },
-    ])
+    ]
+    if (canDelete) {
+      actions.push({
+        text: '刪除',
+        style: 'destructive' as const,
+        onPress: () =>
+          Alert.alert('刪除清單', `確定刪除「${name}」？`, [
+            { text: '取消', style: 'cancel' },
+            { text: '刪除', style: 'destructive', onPress: () => deleteWishlist(id) },
+          ]),
+      })
+    }
+    if (isShared && !inviteCode) {
+      actions.push({
+        text: '離開清單',
+        style: 'destructive' as const,
+        onPress: () =>
+          Alert.alert('離開清單', `確定離開「${name}」？`, [
+            { text: '取消', style: 'cancel' },
+            { text: '離開', style: 'destructive', onPress: () => deleteWishlist(id) },
+          ]),
+      })
+    }
+    actions.push({ text: '取消', style: 'cancel' as const })
+    Alert.alert(name, '', actions)
   }
 
   return (
@@ -59,7 +73,7 @@ export function WishlistScreen() {
           <TouchableOpacity
             style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => navigation.navigate('WishlistDetail', { wishlistId: wl.id })}
-            onLongPress={() => handleLongPress(wl.id, wl.name, wl.isShared)}
+            onLongPress={() => handleLongPress(wl.id, wl.name, wl.isShared, wl.inviteCode)}
           >
             <View style={styles.cardTop}>
               <Text style={[styles.cardName, { color: colors.text }]}>
