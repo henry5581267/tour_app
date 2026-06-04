@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ScrollView, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { RootStackParamList, TripPlace } from '../../../shared/types'
@@ -17,6 +17,7 @@ type TravelTimes = Record<number, Record<number, string>>
 export function ItineraryDetailScreen({ route, navigation }: Props) {
   const { tripId } = route.params
   const { colors } = useTheme()
+  const insets = useSafeAreaInsets()
   const trips = useItineraryStore(s => s.trips)
   const dayLocks = useItineraryStore(s => s.dayLocks)
   const sortingDayKey = useItineraryStore(s => s.sortingDayKey)
@@ -105,7 +106,7 @@ export function ItineraryDetailScreen({ route, navigation }: Props) {
           )
         })}
       </ScrollView>
-      <TouchableOpacity style={styles.fab} onPress={() => { setManualDay(0); setShowManual(true) }}>
+      <TouchableOpacity style={[styles.fab, { bottom: 24 + insets.bottom }]} onPress={() => { setManualDay(0); setShowManual(true) }}>
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
       <ManualPlaceModal

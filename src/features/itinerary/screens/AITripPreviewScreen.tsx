@@ -1,5 +1,5 @@
 import React from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ScrollView, View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { RootStackParamList } from '../../../shared/types'
@@ -12,6 +12,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'AITripPreview'>
 export function AITripPreviewScreen({ route, navigation }: Props) {
   const { itinerary } = route.params
   const { colors } = useTheme()
+  const insets = useSafeAreaInsets()
   const createTripFromAI = useItineraryStore(s => s.createTripFromAI)
 
   const handleConfirm = async () => {
@@ -20,8 +21,8 @@ export function AITripPreviewScreen({ route, navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView contentContainerStyle={styles.content}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: 120 + insets.bottom }]}>
         <Text style={[styles.tripName, { color: colors.text }]}>{itinerary.tripName}</Text>
         <Text style={[styles.hint, { color: colors.textTertiary }]}>
           地點座標尚未取得，加入行程後可在地圖搜尋補全。
@@ -48,7 +49,7 @@ export function AITripPreviewScreen({ route, navigation }: Props) {
         ))}
       </ScrollView>
 
-      <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+      <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: 16 + insets.bottom }]}>
         <TouchableOpacity
           style={[styles.retryBtn, { borderColor: colors.border }]}
           onPress={() => navigation.goBack()}

@@ -1,6 +1,7 @@
 import React from 'react'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { Text, TouchableOpacity } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { TabParamList } from '../shared/types'
 import { PlacesScreen } from '../features/places/screens/PlacesScreen'
 import { WishlistScreen } from '../features/wishlist/screens/WishlistScreen'
@@ -14,6 +15,7 @@ const icon = (label: string) => () => <Text style={{ fontSize: 20 }}>{label}</Te
 
 export function TabNavigator() {
   const { colors, isDark, toggleTheme } = useTheme()
+  const insets = useSafeAreaInsets()
 
   const themeBtn = () => (
     <TouchableOpacity onPress={toggleTheme} style={{ marginRight: 16 }}>
@@ -33,8 +35,8 @@ export function TabNavigator() {
         tabBarStyle: {
           backgroundColor: colors.tabBar,
           borderTopColor: colors.border,
-          paddingBottom: 8,
-          height: 60,
+          paddingBottom: 8 + insets.bottom,
+          height: 60 + insets.bottom,
         },
       }}
     >
