@@ -1,0 +1,15 @@
+// 統一入口：依 config 的 AI_PROVIDER 選擇 Claude 或 GPT
+import { AI_PROVIDER } from '../config'
+import { GeneratedItinerary } from '../types'
+import { GenerateRequest } from './itineraryPrompt'
+import { generateAIItinerary } from './claudeItinerary'
+import { generateGptItinerary } from './gptItinerary'
+
+export function generateItinerary(params: GenerateRequest): Promise<GeneratedItinerary> {
+  if (AI_PROVIDER === 'gpt') {
+    return generateGptItinerary(params)
+  }
+  return generateAIItinerary(params)
+}
+
+export type { GenerateRequest }

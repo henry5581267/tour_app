@@ -4,7 +4,7 @@ import {
   StyleSheet, ActivityIndicator, Alert,
 } from 'react-native'
 import { useTheme } from '../../../shared/theme/ThemeContext'
-import { generateAIItinerary } from '../../../shared/api/claudeItinerary'
+import { generateItinerary } from '../../../shared/api/aiItinerary'
 import { GeneratedItinerary } from '../../../shared/types'
 import { useWishlistStore } from '../../wishlist/store'
 
@@ -30,7 +30,7 @@ export function AITripModal({ visible, onClose, onSuccess }: Props) {
     setLoading(true)
     try {
       const selectedWishlist = wishlists.find(w => w.id === selectedWishlistId)
-      const itinerary = await generateAIItinerary({
+      const itinerary = await generateItinerary({
         destination: destination.trim(),
         days,
         preferences,
