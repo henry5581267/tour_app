@@ -15,6 +15,8 @@ export interface TripPlace {
   note?: string
   // 從前一個地點移動到此地點的建議交通方式
   transport?: TransportMode
+  // 開車抵達時的建議停車地點
+  parking?: string
 }
 
 export interface TripDay {
@@ -75,6 +77,8 @@ export interface GeneratedPlace {
   note: string
   // 從前一個地點移動到此地點的建議交通方式（當天第一個地點為 undefined）
   transport?: TransportMode
+  // 開車抵達時的建議停車地點（僅 transport 為 driving 時提供）
+  parking?: string
 }
 
 export interface GeneratedDay {

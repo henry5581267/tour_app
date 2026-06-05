@@ -322,6 +322,7 @@ export const useItineraryStore = create<ItineraryState>((set, get) => ({
             photo: saved?.photo ?? '',
             note: `${p.time} — ${p.note}`,
             transport: p.transport ?? undefined,
+            parking: p.parking ?? undefined,
           }
         }),
       })),

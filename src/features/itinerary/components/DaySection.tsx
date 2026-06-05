@@ -132,6 +132,9 @@ export function DaySection({
                 {place.note ? (
                   <Text style={[styles.placeNote, { color: colors.textTertiary }]}>💡 {place.note}</Text>
                 ) : null}
+                {place.parking ? (
+                  <Text style={[styles.placeParking, { color: colors.primary }]}>🅿️ 建議停車：{place.parking}</Text>
+                ) : null}
               </View>
               {!isLocked && totalDays > 1 && (
                 <View style={styles.rightBtns}>
@@ -183,6 +186,7 @@ const styles = StyleSheet.create({
   placeName: { fontSize: 14, fontWeight: '700', marginTop: 4 },
   placeAddr: { fontSize: 12, marginTop: 2 },
   placeNote: { fontSize: 11, marginTop: 4, lineHeight: 16 },
+  placeParking: { fontSize: 11, marginTop: 4, lineHeight: 16, fontWeight: '600' },
   rightBtns: { flexDirection: 'column', alignItems: 'center', gap: 6, marginLeft: 8 },
   moveBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   moveBtnText: { fontSize: 16, fontWeight: '700' },
