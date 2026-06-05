@@ -147,10 +147,11 @@ export function DaySection({
                 </View>
               )}
             </TouchableOpacity>
-            {travelTimes[idx] ? (
+            {idx < day.places.length - 1 ? (
               <View style={styles.travelRow}>
                 <Text style={[styles.travelText, { color: colors.textTertiary }]}>
-                  {TRANSPORT_EMOJI[segTransport(idx)]} {TRANSPORT_LABEL[segTransport(idx)]} · {travelTimes[idx]}
+                  {TRANSPORT_EMOJI[segTransport(idx)]} {TRANSPORT_LABEL[segTransport(idx)]}
+                  {travelTimes[idx] ? ` · ${travelTimes[idx]}` : ''}
                 </Text>
               </View>
             ) : null}
