@@ -95,7 +95,12 @@ export function DaySection({
       ) : (
         day.places.map((place, idx) => (
           <View key={place.id}>
-            <View style={[styles.placeRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <TouchableOpacity
+              style={[styles.placeRow, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              onLongPress={isLocked ? undefined : () => confirmDelete('移除地點', `確定移除「${place.name}」？`, () => onDelete(place.id))}
+              delayLongPress={400}
+              activeOpacity={0.7}
+            >
               <View style={styles.orderBtns}>
                 <TouchableOpacity
                   style={[styles.orderBtn, { backgroundColor: colors.surfaceSecondary }, (idx === 0 || isLocked) && styles.orderBtnDisabled]}
@@ -120,25 +125,17 @@ export function DaySection({
                   <Text style={[styles.placeNote, { color: colors.textTertiary }]}>💡 {place.note}</Text>
                 ) : null}
               </View>
-              {!isLocked && (
+              {!isLocked && totalDays > 1 && (
                 <View style={styles.rightBtns}>
-                  {totalDays > 1 && (
-                    <TouchableOpacity
-                      style={[styles.moveBtn, { backgroundColor: colors.surfaceSecondary }]}
-                      onPress={() => handleMove(place)}
-                    >
-                      <Text style={[styles.moveBtnText, { color: colors.primary }]}>⇄</Text>
-                    </TouchableOpacity>
-                  )}
                   <TouchableOpacity
-                    style={styles.deleteBtn}
-                    onPress={() => confirmDelete('移除地點', `確定移除「${place.name}」？`, () => onDelete(place.id))}
+                    style={[styles.moveBtn, { backgroundColor: colors.surfaceSecondary }]}
+                    onPress={() => handleMove(place)}
                   >
-                    <Text style={[styles.deleteBtnText, { color: colors.danger }]}>✕</Text>
+                    <Text style={[styles.moveBtnText, { color: colors.primary }]}>⇄</Text>
                   </TouchableOpacity>
                 </View>
               )}
-            </View>
+            </TouchableOpacity>
             {travelTimes[idx] ? (
               <View style={styles.travelRow}>
                 <Text style={[styles.travelText, { color: colors.textTertiary }]}>
@@ -181,8 +178,6 @@ const styles = StyleSheet.create({
   rightBtns: { flexDirection: 'column', alignItems: 'center', gap: 6, marginLeft: 8 },
   moveBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   moveBtnText: { fontSize: 16, fontWeight: '700' },
-  deleteBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
-  deleteBtnText: { fontSize: 14, fontWeight: '700' },
   travelRow: { alignItems: 'center', paddingVertical: 4, marginHorizontal: 32 },
   travelText: { fontSize: 11 },
 })
