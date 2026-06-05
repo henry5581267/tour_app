@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Trip, TripPlace, GeneratedItinerary } from '../../shared/types'
+import { Trip, TripPlace, GeneratedItinerary, TransportMode } from '../../shared/types'
 import {
   getTrips, addTrip, updateTrip, deleteTrip,
   getSharedTripIds, saveSharedTripIds,
@@ -50,7 +50,7 @@ interface ItineraryState {
   acquireDayLock: (tripId: string, dayIndex: number) => Promise<boolean>
   releaseDayLock: (tripId: string, dayIndex: number) => Promise<void>
   releaseAllLocksForTrip: (tripId: string) => Promise<void>
-  createTripFromAI: (itinerary: GeneratedItinerary) => Promise<Trip>
+  createTripFromAI: (itinerary: GeneratedItinerary, transportMode?: TransportMode) => Promise<Trip>
 }
 
 export const useItineraryStore = create<ItineraryState>((set, get) => ({
@@ -295,7 +295,7 @@ export const useItineraryStore = create<ItineraryState>((set, get) => ({
     }
   },
 
-  createTripFromAI: async (itinerary) => {
+  createTripFromAI: async (itinerary, transportMode) => {
     // 收藏景點有完整正確資料（地址、座標、照片），用來覆蓋 AI 自行生成的版本
     const savedItems = useWishlistStore.getState().wishlists.flatMap(w => w.items)
     const findSaved = (name: string) => savedItems.find(i => i.name === name)
@@ -306,6 +306,7 @@ export const useItineraryStore = create<ItineraryState>((set, get) => ({
       days: itinerary.days.length,
       createdAt: new Date().toISOString(),
       isShared: false,
+      transportMode,
       tripDays: itinerary.days.map(d => ({
         dayIndex: d.dayIndex,
         places: d.places.map(p => {

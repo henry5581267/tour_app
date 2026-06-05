@@ -61,10 +61,24 @@ export async function searchPlaces(
 export async function getPlaceDetails(
   placeId: string,
 ): Promise<{ openingHours?: string }> {
-  const url = `${PLACES_BASE_URL}/details/json?place_id=${placeId}&fields=opening_hours&key=${GOOGLE_PLACES_API_KEY}`
+  const url = `${PLACES_BASE_URL}/details/json?place_id=${placeId}&fields=opening_hours&language=zh-TW&key=${GOOGLE_PLACES_API_KEY}`
   const res = await fetch(url)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  const data = await res.json()
+  const data: any = await res.json()
   const hours = data.result?.opening_hours?.weekday_text?.join('\n')
   return { openingHours: hours }
+}
+
+// 查詢座標附近的熱門地點（給 AI 規劃參考附近景點）
+export async function nearbySearch(
+  lat: number,
+  lng: number,
+  radius = 800,
+): Promise<{ name: string; rating?: number }[]> {
+  const url = `${PLACES_BASE_URL}/nearbysearch/json?location=${lat},${lng}&radius=${radius}&language=zh-TW&key=${GOOGLE_PLACES_API_KEY}`
+  const res = await fetch(url).catch(() => null)
+  if (!res?.ok) return []
+  const data: any = await res.json()
+  if (data.status !== 'OK') return []
+  return (data.results ?? []).map((r: any) => ({ name: r.name, rating: r.rating }))
 }

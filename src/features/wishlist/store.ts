@@ -96,6 +96,7 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       lng: place.lng,
       address: place.address,
       photo: place.photo,
+      rating: place.rating,
       addedAt: new Date().toISOString(),
     }
     const shared = _sharedWishlists.get(wishlistId)

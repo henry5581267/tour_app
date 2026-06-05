@@ -14,7 +14,7 @@ import { ShareTripModal } from '../components/ShareTripModal'
 import { JoinTripModal } from '../components/JoinTripModal'
 import { useTheme } from '../../../shared/theme/ThemeContext'
 import { AITripModal } from '../components/AITripModal'
-import { GeneratedItinerary } from '../../../shared/types'
+import { GeneratedItinerary, TransportMode } from '../../../shared/types'
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Tabs'>
 
@@ -100,9 +100,9 @@ export function ItineraryListScreen() {
     setRenameTarget(null)
   }
 
-  const handleAISuccess = (itinerary: GeneratedItinerary) => {
+  const handleAISuccess = (itinerary: GeneratedItinerary, transportMode: TransportMode) => {
     setShowAI(false)
-    navigation.navigate('AITripPreview', { itinerary })
+    navigation.navigate('AITripPreview', { itinerary, transportMode })
   }
 
   return (

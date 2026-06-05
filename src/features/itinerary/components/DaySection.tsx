@@ -1,14 +1,19 @@
 import React from 'react'
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native'
-import { TripDay, TripPlace } from '../../../shared/types'
+import { TripDay, TripPlace, TransportMode } from '../../../shared/types'
 import { CategoryBadge } from '../../../shared/components/CategoryBadge'
 import { confirmDelete } from '../../../shared/components/ConfirmDialog'
 import { useTheme } from '../../../shared/theme/ThemeContext'
+
+const TRANSPORT_EMOJI: Record<TransportMode, string> = {
+  driving: '🚗', transit: '🚆', walking: '🚶', bicycling: '🚴',
+}
 
 interface Props {
   day: TripDay
   travelTimes: Record<number, string>
   totalDays: number
+  transportMode?: TransportMode
   isSorting?: boolean
   lockedBy?: string
   isMyLock?: boolean
@@ -20,7 +25,7 @@ interface Props {
 }
 
 export function DaySection({
-  day, travelTimes, totalDays, isSorting, lockedBy, isMyLock,
+  day, travelTimes, totalDays, transportMode, isSorting, lockedBy, isMyLock,
   onReorder, onDelete, onAutoSort, onAddManual, onMoveToDay,
 }: Props) {
   const { colors } = useTheme()
@@ -136,7 +141,9 @@ export function DaySection({
             </View>
             {travelTimes[idx] ? (
               <View style={styles.travelRow}>
-                <Text style={[styles.travelText, { color: colors.textTertiary }]}>🚶 {travelTimes[idx]}</Text>
+                <Text style={[styles.travelText, { color: colors.textTertiary }]}>
+                  {TRANSPORT_EMOJI[transportMode ?? 'walking']} {travelTimes[idx]}
+                </Text>
               </View>
             ) : null}
           </View>

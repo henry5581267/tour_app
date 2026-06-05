@@ -30,18 +30,33 @@ export const ITINERARY_SYSTEM_PROMPT = `你是一個專業的繁體中文旅遊�
   ]
 }`
 
+export type TransportMode = 'driving' | 'transit' | 'walking' | 'bicycling'
+
+const TRANSPORT_LABEL: Record<TransportMode, string> = {
+  driving: '自行開車',
+  transit: '大眾運輸（捷運、公車、火車）',
+  walking: '步行',
+  bicycling: '騎自行車',
+}
+
 export interface GenerateRequest {
   destination: string
   days: number
   preferences: string
+  transportMode?: TransportMode
+  // 每個元素為一個收藏景點的描述（含地址、評分、營業時間、附近推薦等）
   wishlistPlaces?: string[]
 }
 
 export function buildUserPrompt(params: GenerateRequest): string {
   let userPrompt = `目的地：${params.destination}\n天數：${params.days} 天\n偏好：${params.preferences || '無特別偏好'}`
 
+  if (params.transportMode) {
+    userPrompt += `\n主要交通方式：${TRANSPORT_LABEL[params.transportMode]}。請依此安排地點間的距離與順序，避免在此交通方式下移動過於困難或耗時的路線。`
+  }
+
   if (params.wishlistPlaces && params.wishlistPlaces.length > 0) {
-    userPrompt += `\n\n以下是使用者的收藏景點清單，請優先將這些景點安排到行程中，不足的天數或種類再補充其他推薦。括號內為該地點的正確地址，安排這些景點時請務必原封不動沿用括號內的地址，絕對不要自行更改或重新猜測地址：\n${params.wishlistPlaces.join('\n')}`
+    userPrompt += `\n\n以下是使用者的收藏景點清單，請優先將這些景點安排到行程中，不足的天數或種類再補充其他推薦。每個景點已附上正確地址、評分、營業時間與附近推薦景點，安排時請務必原封不動沿用提供的地址（絕對不要自行更改或猜測地址），並參考營業時間避開公休、參考評分與附近推薦來補充其他地點：\n${params.wishlistPlaces.join('\n\n')}`
   }
   return userPrompt
 }

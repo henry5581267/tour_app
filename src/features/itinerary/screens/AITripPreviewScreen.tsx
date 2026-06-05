@@ -10,13 +10,13 @@ import { CategoryBadge } from '../../../shared/components/CategoryBadge'
 type Props = NativeStackScreenProps<RootStackParamList, 'AITripPreview'>
 
 export function AITripPreviewScreen({ route, navigation }: Props) {
-  const { itinerary } = route.params
+  const { itinerary, transportMode } = route.params
   const { colors } = useTheme()
   const insets = useSafeAreaInsets()
   const createTripFromAI = useItineraryStore(s => s.createTripFromAI)
 
   const handleConfirm = async () => {
-    const trip = await createTripFromAI(itinerary)
+    const trip = await createTripFromAI(itinerary, transportMode)
     navigation.replace('ItineraryDetail', { tripId: trip.id })
   }
 

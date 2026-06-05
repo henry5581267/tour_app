@@ -5,14 +5,22 @@ import {
 } from 'react-native'
 import { useTheme } from '../../../shared/theme/ThemeContext'
 import { generateItinerary } from '../../../shared/api/aiItinerary'
-import { GeneratedItinerary } from '../../../shared/types'
+import { enrichWishlistForAI } from '../../../shared/api/enrichItineraryInput'
+import { GeneratedItinerary, TransportMode } from '../../../shared/types'
 import { useWishlistStore } from '../../wishlist/store'
 
 interface Props {
   visible: boolean
   onClose: () => void
-  onSuccess: (itinerary: GeneratedItinerary) => void
+  onSuccess: (itinerary: GeneratedItinerary, transportMode: TransportMode) => void
 }
+
+const TRANSPORT_OPTIONS: { mode: TransportMode; label: string }[] = [
+  { mode: 'driving', label: '🚗 開車' },
+  { mode: 'transit', label: '🚆 大眾運輸' },
+  { mode: 'walking', label: '🚶 步行' },
+  { mode: 'bicycling', label: '🚴 騎車' },
+]
 
 export function AITripModal({ visible, onClose, onSuccess }: Props) {
   const { colors } = useTheme()
@@ -21,6 +29,7 @@ export function AITripModal({ visible, onClose, onSuccess }: Props) {
   const [destination, setDestination] = useState('')
   const [days, setDays] = useState(3)
   const [preferences, setPreferences] = useState('')
+  const [transportMode, setTransportMode] = useState<TransportMode>('driving')
   const [loading, setLoading] = useState(false)
 
   const canSubmit = destination.trim().length > 0 && !loading
@@ -30,19 +39,22 @@ export function AITripModal({ visible, onClose, onSuccess }: Props) {
     setLoading(true)
     try {
       const selectedWishlist = wishlists.find(w => w.id === selectedWishlistId)
+      const wishlistPlaces = selectedWishlist
+        ? await enrichWishlistForAI(selectedWishlist.items)
+        : undefined
       const itinerary = await generateItinerary({
         destination: destination.trim(),
         days,
         preferences,
-        wishlistPlaces: selectedWishlist
-          ? selectedWishlist.items.map(i => i.address ? `${i.name}（${i.address}）` : i.name)
-          : undefined,
+        transportMode,
+        wishlistPlaces,
       })
       setDestination('')
       setDays(3)
       setPreferences('')
+      setTransportMode('driving')
       setSelectedWishlistId(null)
-      onSuccess(itinerary)
+      onSuccess(itinerary, transportMode)
     } catch (err: any) {
       Alert.alert('規劃失敗', err?.message ?? 'AI服務暫時無法使用，請稍後再試')
     } finally {
@@ -82,6 +94,28 @@ export function AITripModal({ visible, onClose, onSuccess }: Props) {
             >
               <Text style={[styles.dayBtnText, { color: colors.text }]}>+</Text>
             </TouchableOpacity>
+          </View>
+
+          <Text style={[styles.label, { color: colors.textSecondary }]}>交通方式</Text>
+          <View style={styles.transportRow}>
+            {TRANSPORT_OPTIONS.map(opt => {
+              const active = transportMode === opt.mode
+              return (
+                <TouchableOpacity
+                  key={opt.mode}
+                  style={[styles.transportBtn, {
+                    borderColor: active ? colors.primary : colors.border,
+                    backgroundColor: active ? colors.primary + '18' : colors.surfaceSecondary,
+                  }]}
+                  onPress={() => setTransportMode(opt.mode)}
+                  disabled={loading}
+                >
+                  <Text style={[styles.transportText, { color: active ? colors.primary : colors.textSecondary }]}>
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              )
+            })}
           </View>
 
           <Text style={[styles.label, { color: colors.textSecondary }]}>偏好描述（選填）</Text>
@@ -166,4 +200,7 @@ const styles = StyleSheet.create({
   wishlistSection: { marginTop: 16 },
   wishlistPicker: { borderWidth: 1.5, borderRadius: 10, padding: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
   wishlistPickerText: { fontSize: 14 },
+  transportRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  transportBtn: { borderWidth: 1.5, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 12 },
+  transportText: { fontSize: 13, fontWeight: '600' },
 })

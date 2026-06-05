@@ -27,6 +27,7 @@ export interface Trip {
   createdAt: string
   isShared: boolean
   inviteCode?: string
+  transportMode?: TransportMode
   tripDays: TripDay[]
 }
 
@@ -50,8 +51,11 @@ export interface WishlistItem {
   lng: number
   address: string
   photo: string
+  rating?: number
   addedAt: string
 }
+
+export type TransportMode = 'driving' | 'transit' | 'walking' | 'bicycling'
 
 export interface Wishlist {
   id: string
@@ -84,7 +88,7 @@ export type RootStackParamList = {
   Tabs: undefined
   PlaceDetail: { place: PlaceSearchResult }
   ItineraryDetail: { tripId: string }
-  AITripPreview: { itinerary: GeneratedItinerary }
+  AITripPreview: { itinerary: GeneratedItinerary; transportMode?: TransportMode }
   WishlistDetail: { wishlistId: string }
 }
 
