@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native'
 import { TripDay, TripPlace } from '../../../shared/types'
 import { CategoryBadge } from '../../../shared/components/CategoryBadge'
 import { confirmDelete } from '../../../shared/components/ConfirmDialog'
@@ -8,6 +8,7 @@ import { useTheme } from '../../../shared/theme/ThemeContext'
 interface Props {
   day: TripDay
   travelTimes: Record<number, string>
+  totalDays: number
   isSorting?: boolean
   lockedBy?: string
   isMyLock?: boolean
@@ -15,14 +16,27 @@ interface Props {
   onDelete: (placeId: string) => void
   onAutoSort: () => void
   onAddManual: () => void | Promise<void>
+  onMoveToDay: (placeId: string, toDay: number) => void
 }
 
 export function DaySection({
-  day, travelTimes, isSorting, lockedBy, isMyLock,
-  onReorder, onDelete, onAutoSort, onAddManual,
+  day, travelTimes, totalDays, isSorting, lockedBy, isMyLock,
+  onReorder, onDelete, onAutoSort, onAddManual, onMoveToDay,
 }: Props) {
   const { colors } = useTheme()
   const isLocked = !!lockedBy && !isMyLock
+
+  const handleMove = (place: TripPlace) => {
+    const others = Array.from({ length: totalDays }, (_, i) => i).filter(d => d !== day.dayIndex)
+    Alert.alert(
+      '移動到其他天',
+      `「${place.name}」要移動到第幾天？`,
+      [
+        ...others.map(d => ({ text: `第 ${d + 1} 天`, onPress: () => onMoveToDay(place.id, d) })),
+        { text: '取消', style: 'cancel' as const },
+      ],
+    )
+  }
 
   const moveUp = (idx: number) => {
     if (idx === 0 || isLocked) return
@@ -97,14 +111,27 @@ export function DaySection({
                 <CategoryBadge category={place.category} />
                 <Text style={[styles.placeName, { color: colors.text }]}>{place.name}</Text>
                 <Text style={[styles.placeAddr, { color: colors.textSecondary }]} numberOfLines={1}>{place.address}</Text>
+                {place.note ? (
+                  <Text style={[styles.placeNote, { color: colors.textTertiary }]}>💡 {place.note}</Text>
+                ) : null}
               </View>
               {!isLocked && (
-                <TouchableOpacity
-                  style={styles.deleteBtn}
-                  onPress={() => confirmDelete('移除地點', `確定移除「${place.name}」？`, () => onDelete(place.id))}
-                >
-                  <Text style={[styles.deleteBtnText, { color: colors.danger }]}>✕</Text>
-                </TouchableOpacity>
+                <View style={styles.rightBtns}>
+                  {totalDays > 1 && (
+                    <TouchableOpacity
+                      style={[styles.moveBtn, { backgroundColor: colors.surfaceSecondary }]}
+                      onPress={() => handleMove(place)}
+                    >
+                      <Text style={[styles.moveBtnText, { color: colors.primary }]}>⇄</Text>
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity
+                    style={styles.deleteBtn}
+                    onPress={() => confirmDelete('移除地點', `確定移除「${place.name}」？`, () => onDelete(place.id))}
+                  >
+                    <Text style={[styles.deleteBtnText, { color: colors.danger }]}>✕</Text>
+                  </TouchableOpacity>
+                </View>
               )}
             </View>
             {travelTimes[idx] ? (
@@ -143,7 +170,11 @@ const styles = StyleSheet.create({
   placeInfo: { flex: 1 },
   placeName: { fontSize: 14, fontWeight: '700', marginTop: 4 },
   placeAddr: { fontSize: 12, marginTop: 2 },
-  deleteBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginLeft: 8 },
+  placeNote: { fontSize: 11, marginTop: 4, lineHeight: 16 },
+  rightBtns: { flexDirection: 'column', alignItems: 'center', gap: 6, marginLeft: 8 },
+  moveBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  moveBtnText: { fontSize: 16, fontWeight: '700' },
+  deleteBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   deleteBtnText: { fontSize: 14, fontWeight: '700' },
   travelRow: { alignItems: 'center', paddingVertical: 4, marginHorizontal: 32 },
   travelText: { fontSize: 11 },

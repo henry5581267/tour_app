@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { RootStackParamList, TripPlace } from '../../../shared/types'
@@ -8,6 +8,7 @@ import { DaySection } from '../components/DaySection'
 import { EmptyState } from '../../../shared/components/EmptyState'
 import { getTravelTime } from '../../../shared/api/directions'
 import { ManualPlaceModal } from '../components/ManualPlaceModal'
+import { BatchAddToTripModal } from '../components/BatchAddToTripModal'
 import { useTheme } from '../../../shared/theme/ThemeContext'
 import { getDeviceId } from '../../../shared/firebase/deviceId'
 
@@ -17,7 +18,6 @@ type TravelTimes = Record<number, Record<number, string>>
 export function ItineraryDetailScreen({ route, navigation }: Props) {
   const { tripId } = route.params
   const { colors } = useTheme()
-  const insets = useSafeAreaInsets()
   const trips = useItineraryStore(s => s.trips)
   const dayLocks = useItineraryStore(s => s.dayLocks)
   const sortingDayKey = useItineraryStore(s => s.sortingDayKey)
@@ -25,12 +25,14 @@ export function ItineraryDetailScreen({ route, navigation }: Props) {
   const removePlaceFromTrip = useItineraryStore(s => s.removePlaceFromTrip)
   const autoSortDay = useItineraryStore(s => s.autoSortDay)
   const addPlaceToTrip = useItineraryStore(s => s.addPlaceToTrip)
+  const movePlaceToDay = useItineraryStore(s => s.movePlaceToDay)
   const acquireDayLock = useItineraryStore(s => s.acquireDayLock)
   const releaseAllLocksForTrip = useItineraryStore(s => s.releaseAllLocksForTrip)
 
   const [travelTimes, setTravelTimes] = useState<TravelTimes>({})
   const [showManual, setShowManual] = useState(false)
   const [manualDay, setManualDay] = useState(0)
+  const [showBatch, setShowBatch] = useState(false)
   const [myDeviceId, setMyDeviceId] = useState<string | null>(null)
 
   const trip = trips.find(t => t.id === tripId)
@@ -60,8 +62,16 @@ export function ItineraryDetailScreen({ route, navigation }: Props) {
   }, [JSON.stringify(trip?.tripDays)])
 
   React.useLayoutEffect(() => {
-    if (trip) navigation.setOptions({ title: trip.name })
-  }, [trip?.name])
+    if (!trip) return
+    navigation.setOptions({
+      title: trip.name,
+      headerRight: () => (
+        <TouchableOpacity onPress={() => setShowBatch(true)} style={{ marginRight: 4 }}>
+          <Text style={{ fontSize: 14, fontWeight: '700', color: colors.primary }}>批次加入</Text>
+        </TouchableOpacity>
+      ),
+    })
+  }, [trip?.name, colors.primary])
 
   const withLock = useCallback(async (dayIndex: number, action: () => Promise<void>) => {
     if (!trip?.isShared) { await action(); return }
@@ -88,12 +98,14 @@ export function ItineraryDetailScreen({ route, navigation }: Props) {
               key={day.dayIndex}
               day={day}
               travelTimes={travelTimes[day.dayIndex] ?? {}}
+              totalDays={trip.tripDays.length}
               isSorting={sortingDayKey === lockKey}
               lockedBy={lockedBy}
               isMyLock={isMyLock}
               onReorder={newOrder => withLock(day.dayIndex, () => reorderDay(tripId, day.dayIndex, newOrder))}
               onDelete={placeId => withLock(day.dayIndex, () => removePlaceFromTrip(tripId, day.dayIndex, placeId))}
               onAutoSort={() => withLock(day.dayIndex, () => autoSortDay(tripId, day.dayIndex))}
+              onMoveToDay={(placeId, toDay) => withLock(day.dayIndex, () => movePlaceToDay(tripId, placeId, day.dayIndex, toDay))}
               onAddManual={async () => {
                 if (trip.isShared) {
                   const acquired = await acquireDayLock(tripId, day.dayIndex)
@@ -106,9 +118,6 @@ export function ItineraryDetailScreen({ route, navigation }: Props) {
           )
         })}
       </ScrollView>
-      <TouchableOpacity style={[styles.fab, { bottom: 24 + insets.bottom }]} onPress={() => { setManualDay(0); setShowManual(true) }}>
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
       <ManualPlaceModal
         visible={showManual}
         dayIndex={manualDay}
@@ -118,6 +127,11 @@ export function ItineraryDetailScreen({ route, navigation }: Props) {
           setShowManual(false)
         }}
       />
+      <BatchAddToTripModal
+        visible={showBatch}
+        trip={trip}
+        onClose={() => setShowBatch(false)}
+      />
     </SafeAreaView>
   )
 }
@@ -125,11 +139,4 @@ export function ItineraryDetailScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingVertical: 8 },
-  fab: {
-    position: 'absolute', right: 24, bottom: 24,
-    width: 52, height: 52, borderRadius: 26,
-    backgroundColor: '#10b981', justifyContent: 'center', alignItems: 'center',
-    elevation: 6, shadowColor: '#10b981', shadowOpacity: 0.4, shadowRadius: 8, shadowOffset: { width: 0, height: 4 },
-  },
-  fabText: { color: '#fff', fontSize: 28, lineHeight: 32 },
 })
