@@ -9,6 +9,7 @@ export const ITINERARY_SYSTEM_PROMPT = `你是一個專業的繁體中文旅遊�
 3. 時間從早上 9:00 開始，合理安排。
 4. category 只能是 "attraction"、"restaurant"、"activity" 其中之一。
 5. 每個地點的 note 提供一句實用的旅遊小提示。
+6. 每個地點加上 transport 欄位，代表「從前一個地點移動到此地點」建議的交通方式，只能是 "driving"（開車）、"transit"（大眾運輸）、"walking"（步行）、"bicycling"（騎車）其中之一。請依兩地點的實際距離與使用者的主要交通方式偏好，為每一段選擇最合適的方式（例如很近就 walking、跨城市就 transit 或 driving）。當天第一個地點沒有前一站，transport 設為 null。
 
 回傳格式：
 {
@@ -23,7 +24,8 @@ export const ITINERARY_SYSTEM_PROMPT = `你是一個專業的繁體中文旅遊�
           "category": "attraction",
           "address": "...",
           "time": "上午 10:00",
-          "note": "..."
+          "note": "...",
+          "transport": "walking"
         }
       ]
     }

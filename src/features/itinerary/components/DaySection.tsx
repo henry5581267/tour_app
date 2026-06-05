@@ -9,6 +9,10 @@ const TRANSPORT_EMOJI: Record<TransportMode, string> = {
   driving: '🚗', transit: '🚆', walking: '🚶', bicycling: '🚴',
 }
 
+const TRANSPORT_LABEL: Record<TransportMode, string> = {
+  driving: '開車', transit: '大眾運輸', walking: '步行', bicycling: '騎車',
+}
+
 interface Props {
   day: TripDay
   travelTimes: Record<number, string>
@@ -30,6 +34,10 @@ export function DaySection({
 }: Props) {
   const { colors } = useTheme()
   const isLocked = !!lockedBy && !isMyLock
+
+  // 第 idx 段（place[idx] → place[idx+1]）的交通方式 = 下一站建議的交通方式
+  const segTransport = (idx: number): TransportMode =>
+    day.places[idx + 1]?.transport ?? transportMode ?? 'walking'
 
   const handleMove = (place: TripPlace) => {
     const others = Array.from({ length: totalDays }, (_, i) => i).filter(d => d !== day.dayIndex)
@@ -139,7 +147,7 @@ export function DaySection({
             {travelTimes[idx] ? (
               <View style={styles.travelRow}>
                 <Text style={[styles.travelText, { color: colors.textTertiary }]}>
-                  {TRANSPORT_EMOJI[transportMode ?? 'walking']} {travelTimes[idx]}
+                  {TRANSPORT_EMOJI[segTransport(idx)]} {TRANSPORT_LABEL[segTransport(idx)]} · {travelTimes[idx]}
                 </Text>
               </View>
             ) : null}

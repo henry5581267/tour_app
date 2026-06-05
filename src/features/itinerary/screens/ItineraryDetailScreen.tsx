@@ -53,7 +53,7 @@ export function ItineraryDetailScreen({ route, navigation }: Props) {
         for (let i = 0; i < day.places.length - 1; i++) {
           const from = day.places[i]
           const to = day.places[i + 1]
-          result[day.dayIndex][i] = await getTravelTime(from.lat, from.lng, to.lat, to.lng).catch(() => '')
+          result[day.dayIndex][i] = await getTravelTime(from.lat, from.lng, to.lat, to.lng, to.transport ?? trip.transportMode ?? 'walking').catch(() => '')
         }
       }
       setTravelTimes(result)
@@ -99,6 +99,7 @@ export function ItineraryDetailScreen({ route, navigation }: Props) {
               day={day}
               travelTimes={travelTimes[day.dayIndex] ?? {}}
               totalDays={trip.tripDays.length}
+              transportMode={trip.transportMode}
               isSorting={sortingDayKey === lockKey}
               lockedBy={lockedBy}
               isMyLock={isMyLock}

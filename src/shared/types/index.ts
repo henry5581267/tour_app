@@ -13,6 +13,8 @@ export interface TripPlace {
   photo: string
   openingHours?: string
   note?: string
+  // 從前一個地點移動到此地點的建議交通方式
+  transport?: TransportMode
 }
 
 export interface TripDay {
@@ -71,6 +73,8 @@ export interface GeneratedPlace {
   address: string
   time: string
   note: string
+  // 從前一個地點移動到此地點的建議交通方式（當天第一個地點為 undefined）
+  transport?: TransportMode
 }
 
 export interface GeneratedDay {
