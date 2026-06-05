@@ -41,7 +41,7 @@ export async function generateAIItinerary(params: GenerateRequest): Promise<Gene
   let userPrompt = `目的地：${params.destination}\n天數：${params.days} 天\n偏好：${params.preferences || '無特別偏好'}`
 
   if (params.wishlistPlaces && params.wishlistPlaces.length > 0) {
-    userPrompt += `\n\n以下是使用者的收藏景點清單，請優先將這些景點安排到行程中，不足的天數或種類再補充其他推薦：\n${params.wishlistPlaces.join('、')}`
+    userPrompt += `\n\n以下是使用者的收藏景點清單，請優先將這些景點安排到行程中，不足的天數或種類再補充其他推薦。括號內為該地點的正確地址，安排這些景點時請務必原封不動沿用括號內的地址，絕對不要自行更改或重新猜測地址：\n${params.wishlistPlaces.join('\n')}`
   }
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {

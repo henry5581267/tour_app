@@ -6,6 +6,7 @@ import {
 } from '../../shared/storage/tripsStorage'
 import { sortByRoute } from './utils/sortByRoute'
 import { getDeviceId } from '../../shared/firebase/deviceId'
+import { useWishlistStore } from '../wishlist/store'
 import {
   uploadTrip, fetchTripByCode, addMember, removeMember,
   updateSharedTrip, subscribeToTrip,
@@ -295,6 +296,10 @@ export const useItineraryStore = create<ItineraryState>((set, get) => ({
   },
 
   createTripFromAI: async (itinerary) => {
+    // 收藏景點有完整正確資料（地址、座標、照片），用來覆蓋 AI 自行生成的版本
+    const savedItems = useWishlistStore.getState().wishlists.flatMap(w => w.items)
+    const findSaved = (name: string) => savedItems.find(i => i.name === name)
+
     const trip: Trip = {
       id: generateId(),
       name: itinerary.tripName,
@@ -303,17 +308,20 @@ export const useItineraryStore = create<ItineraryState>((set, get) => ({
       isShared: false,
       tripDays: itinerary.days.map(d => ({
         dayIndex: d.dayIndex,
-        places: d.places.map(p => ({
-          id: generateId(),
-          googlePlaceId: null,
-          name: p.name,
-          category: p.category,
-          lat: 0,
-          lng: 0,
-          address: p.address,
-          photo: '',
-          note: `${p.time} — ${p.note}`,
-        })),
+        places: d.places.map(p => {
+          const saved = findSaved(p.name)
+          return {
+            id: generateId(),
+            googlePlaceId: saved?.googlePlaceId || null,
+            name: p.name,
+            category: saved?.category ?? p.category,
+            lat: saved?.lat ?? 0,
+            lng: saved?.lng ?? 0,
+            address: saved?.address ?? p.address,
+            photo: saved?.photo ?? '',
+            note: `${p.time} — ${p.note}`,
+          }
+        }),
       })),
     }
     await addTrip(trip)

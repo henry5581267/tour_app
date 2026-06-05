@@ -34,7 +34,9 @@ export function AITripModal({ visible, onClose, onSuccess }: Props) {
         destination: destination.trim(),
         days,
         preferences,
-        wishlistPlaces: selectedWishlist ? selectedWishlist.items.map(i => i.name) : undefined,
+        wishlistPlaces: selectedWishlist
+          ? selectedWishlist.items.map(i => i.address ? `${i.name}（${i.address}）` : i.name)
+          : undefined,
       })
       setDestination('')
       setDays(3)
