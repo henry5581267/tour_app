@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import { ScrollView, View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { ScrollView, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { RootStackParamList } from '../../../shared/types'
 import { useItineraryStore } from '../store'
@@ -14,10 +14,17 @@ export function AITripPreviewScreen({ route, navigation }: Props) {
   const { colors } = useTheme()
   const insets = useSafeAreaInsets()
   const createTripFromAI = useItineraryStore(s => s.createTripFromAI)
+  const [creating, setCreating] = useState(false)
 
   const handleConfirm = async () => {
-    const trip = await createTripFromAI(itinerary, transportMode)
-    navigation.replace('ItineraryDetail', { tripId: trip.id })
+    if (creating) return
+    setCreating(true)
+    try {
+      const trip = await createTripFromAI(itinerary, transportMode)
+      navigation.replace('ItineraryDetail', { tripId: trip.id })
+    } catch {
+      setCreating(false)
+    }
   }
 
   return (
@@ -53,14 +60,23 @@ export function AITripPreviewScreen({ route, navigation }: Props) {
         <TouchableOpacity
           style={[styles.retryBtn, { borderColor: colors.border }]}
           onPress={() => navigation.goBack()}
+          disabled={creating}
         >
           <Text style={[styles.retryBtnText, { color: colors.text }]}>重新規劃</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.confirmBtn, { backgroundColor: colors.primary }]}
           onPress={handleConfirm}
+          disabled={creating}
         >
-          <Text style={styles.confirmBtnText}>建立行程</Text>
+          {creating ? (
+            <View style={styles.confirmLoading}>
+              <ActivityIndicator color="#fff" size="small" />
+              <Text style={styles.confirmBtnText}>建立中…</Text>
+            </View>
+          ) : (
+            <Text style={styles.confirmBtnText}>建立行程</Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -90,4 +106,5 @@ const styles = StyleSheet.create({
   retryBtnText: { fontSize: 15, fontWeight: '600' },
   confirmBtn: { flex: 2, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   confirmBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  confirmLoading: { flexDirection: 'row', alignItems: 'center', gap: 8 },
 })

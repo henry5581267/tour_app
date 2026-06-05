@@ -7,6 +7,7 @@ import {
 import { sortByRoute } from './utils/sortByRoute'
 import { getDeviceId } from '../../shared/firebase/deviceId'
 import { useWishlistStore } from '../wishlist/store'
+import { searchPlaces } from '../../shared/api/places'
 import {
   uploadTrip, fetchTripByCode, addMember, removeMember,
   updateSharedTrip, subscribeToTrip,
@@ -300,6 +301,52 @@ export const useItineraryStore = create<ItineraryState>((set, get) => ({
     const savedItems = useWishlistStore.getState().wishlists.flatMap(w => w.items)
     const findSaved = (name: string) => savedItems.find(i => i.name === name)
 
+    const tripDays = await Promise.all(
+      itinerary.days.map(async d => ({
+        dayIndex: d.dayIndex,
+        places: await Promise.all(
+          d.places.map(async p => {
+            const saved = findSaved(p.name)
+            let lat = saved?.lat ?? 0
+            let lng = saved?.lng ?? 0
+            let googlePlaceId = saved?.googlePlaceId || null
+            let photo = saved?.photo ?? ''
+            let address = saved?.address ?? p.address
+
+            // 非收藏景點沒有座標 → 用 Google 查，讓優化路線、交通時間、地圖都能運作
+            if (!saved) {
+              try {
+                const query = [p.name, p.address].filter(Boolean).join(' ')
+                const results = await searchPlaces(query)
+                if (results.length > 0) {
+                  const r = results[0]
+                  lat = r.lat
+                  lng = r.lng
+                  googlePlaceId = r.googlePlaceId
+                  photo = r.photo
+                  if (!address) address = r.address
+                }
+              } catch {}
+            }
+
+            return {
+              id: generateId(),
+              googlePlaceId,
+              name: p.name,
+              category: saved?.category ?? p.category,
+              lat,
+              lng,
+              address,
+              photo,
+              note: `${p.time} — ${p.note}`,
+              transport: p.transport ?? undefined,
+              parking: p.parking ?? undefined,
+            }
+          }),
+        ),
+      })),
+    )
+
     const trip: Trip = {
       id: generateId(),
       name: itinerary.tripName,
@@ -307,25 +354,7 @@ export const useItineraryStore = create<ItineraryState>((set, get) => ({
       createdAt: new Date().toISOString(),
       isShared: false,
       transportMode,
-      tripDays: itinerary.days.map(d => ({
-        dayIndex: d.dayIndex,
-        places: d.places.map(p => {
-          const saved = findSaved(p.name)
-          return {
-            id: generateId(),
-            googlePlaceId: saved?.googlePlaceId || null,
-            name: p.name,
-            category: saved?.category ?? p.category,
-            lat: saved?.lat ?? 0,
-            lng: saved?.lng ?? 0,
-            address: saved?.address ?? p.address,
-            photo: saved?.photo ?? '',
-            note: `${p.time} — ${p.note}`,
-            transport: p.transport ?? undefined,
-            parking: p.parking ?? undefined,
-          }
-        }),
-      })),
+      tripDays,
     }
     await addTrip(trip)
     _localTrips.push(trip)
