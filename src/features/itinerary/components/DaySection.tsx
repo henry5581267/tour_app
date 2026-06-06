@@ -83,7 +83,7 @@ export function DaySection({
                   disabled={isSorting}
                 >
                   <Text style={[styles.sortText, { color: colors.primary }]}>
-                    {isSorting ? '排序中…' : '優化路線'}
+                    {isSorting ? 'AI 排序中…' : '✨ 智慧排序'}
                   </Text>
                 </TouchableOpacity>
               )}

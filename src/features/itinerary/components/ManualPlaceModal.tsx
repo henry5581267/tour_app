@@ -21,13 +21,19 @@ export function ManualPlaceModal({ visible, dayIndex, onClose, onAdd }: Props) {
   const { colors } = useTheme()
   const [name, setName] = useState('')
   const [address, setAddress] = useState('')
+  const [openingHours, setOpeningHours] = useState('')
   const [category, setCategory] = useState<PlaceCategory>('attraction')
 
   const handleAdd = () => {
     if (!name.trim()) return
-    onAdd({ id: '', googlePlaceId: null, name: name.trim(), category, lat: 0, lng: 0, address: address.trim(), photo: '' })
+    onAdd({
+      id: '', googlePlaceId: null, name: name.trim(), category,
+      lat: 0, lng: 0, address: address.trim(), photo: '',
+      openingHours: openingHours.trim() || undefined,
+    })
     setName('')
     setAddress('')
+    setOpeningHours('')
     setCategory('attraction')
   }
 
@@ -37,7 +43,7 @@ export function ManualPlaceModal({ visible, dayIndex, onClose, onAdd }: Props) {
         <SafeAreaView style={[styles.sheet, { backgroundColor: colors.surface }]}>
           <ScrollView keyboardShouldPersistTaps="handled">
             <Text style={[styles.title, { color: colors.text }]}>手動新增地點</Text>
-            <Text style={[styles.note, { color: colors.textTertiary }]}>※ 手動新增的地點沒有座標，路線優化時會排在最後</Text>
+            <Text style={[styles.note, { color: colors.textTertiary }]}>※ 填寫地址與營業時間，智慧排序時 AI 會據此安排更合理的順序</Text>
             <Text style={[styles.label, { color: colors.textSecondary }]}>地點名稱 *</Text>
             <TextInput
               style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surfaceSecondary }]}
@@ -53,6 +59,15 @@ export function ManualPlaceModal({ visible, dayIndex, onClose, onAdd }: Props) {
               onChangeText={setAddress}
               placeholder="例如：台北市信義區..."
               placeholderTextColor={colors.textTertiary}
+            />
+            <Text style={[styles.label, { color: colors.textSecondary }]}>營業時間（選填）</Text>
+            <TextInput
+              style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surfaceSecondary }]}
+              value={openingHours}
+              onChangeText={setOpeningHours}
+              placeholder="例如：週一公休，週二-週日 11:00-21:00"
+              placeholderTextColor={colors.textTertiary}
+              multiline
             />
             <Text style={[styles.label, { color: colors.textSecondary }]}>分類</Text>
             <View style={styles.catRow}>

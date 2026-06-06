@@ -4,7 +4,7 @@ import {
   getTrips, addTrip, updateTrip, deleteTrip,
   getSharedTripIds, saveSharedTripIds,
 } from '../../shared/storage/tripsStorage'
-import { sortByRoute } from './utils/sortByRoute'
+import { reorderDayByAI } from '../../shared/api/reorderDay'
 import { getDeviceId } from '../../shared/firebase/deviceId'
 import { useWishlistStore } from '../wishlist/store'
 import { searchPlaces } from '../../shared/api/places'
@@ -194,7 +194,7 @@ export const useItineraryStore = create<ItineraryState>((set, get) => ({
     const key = `${tripId}-${dayIndex}`
     set({ sortingDayKey: key })
     try {
-      const sorted = await sortByRoute(day.places)
+      const sorted = await reorderDayByAI(day.places, trip.transportMode)
       await get().reorderDay(tripId, dayIndex, sorted)
     } finally {
       set({ sortingDayKey: null })
