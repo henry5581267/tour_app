@@ -98,6 +98,7 @@ export type RootStackParamList = {
   ItineraryDetail: { tripId: string }
   AITripPreview: { itinerary: GeneratedItinerary; transportMode?: TransportMode }
   WishlistDetail: { wishlistId: string }
+  Blacklist: undefined
 }
 
 export type TabParamList = {

@@ -7,6 +7,7 @@ import { PlaceDetailScreen } from '../features/places/screens/PlaceDetailScreen'
 import { ItineraryDetailScreen } from '../features/itinerary/screens/ItineraryDetailScreen'
 import { AITripPreviewScreen } from '../features/itinerary/screens/AITripPreviewScreen'
 import { WishlistDetailScreen } from '../features/wishlist/screens/WishlistDetailScreen'
+import { BlacklistScreen } from '../features/wishlist/screens/BlacklistScreen'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
@@ -23,6 +24,8 @@ export function AppNavigator() {
           options={{ title: 'AI 行程預覽', headerBackTitle: '返回' }} />
         <Stack.Screen name="WishlistDetail" component={WishlistDetailScreen}
           options={{ title: '收藏清單', headerBackTitle: '返回' }} />
+        <Stack.Screen name="Blacklist" component={BlacklistScreen}
+          options={{ title: '🚫 黑名單', headerBackTitle: '返回' }} />
       </Stack.Navigator>
     </NavigationContainer>
   )

@@ -55,6 +55,8 @@ export interface GenerateRequest {
   transportMode?: TransportMode
   // 每個元素為一個收藏景點的描述（含地址、評分、營業時間、附近推薦等）
   wishlistPlaces?: string[]
+  // 黑名單：這些地點不得出現在行程中
+  blacklistPlaces?: string[]
 }
 
 export function buildUserPrompt(params: GenerateRequest): string {
@@ -62,6 +64,10 @@ export function buildUserPrompt(params: GenerateRequest): string {
 
   if (params.transportMode) {
     userPrompt += `\n主要交通方式：${TRANSPORT_LABEL[params.transportMode]}。請依此安排地點間的距離與順序，避免在此交通方式下移動過於困難或耗時的路線。`
+  }
+
+  if (params.blacklistPlaces && params.blacklistPlaces.length > 0) {
+    userPrompt += `\n\n以下地點是使用者的黑名單，行程中絕對不能出現這些地點，也不要推薦任何名稱相近的替代地點：\n${params.blacklistPlaces.join('、')}`
   }
 
   if (params.wishlistPlaces && params.wishlistPlaces.length > 0) {

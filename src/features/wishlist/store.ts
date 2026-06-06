@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { Wishlist, WishlistItem, PlaceSearchResult } from '../../shared/types'
 import { getWishlists, saveWishlists } from '../../shared/storage/wishlistStorage'
+import { getBlacklist, saveBlacklist } from '../../shared/storage/blacklistStorage'
 import {
   uploadWishlist,
   fetchWishlistByCode,
@@ -19,6 +20,7 @@ function generateId(): string {
 const _listeners: Record<string, () => void> = {}
 let _localWishlists: Wishlist[] = []
 const _sharedWishlists = new Map<string, Wishlist>()
+let _blacklist: WishlistItem[] = []
 
 function _merged(): Wishlist[] {
   return [..._localWishlists, ..._sharedWishlists.values()]
@@ -26,7 +28,10 @@ function _merged(): Wishlist[] {
 
 interface WishlistState {
   wishlists: Wishlist[]
+  blacklist: WishlistItem[]
   loadWishlists: () => Promise<void>
+  addToBlacklist: (place: PlaceSearchResult) => Promise<void>
+  removeFromBlacklist: (id: string) => Promise<void>
   createWishlist: (name: string) => Promise<Wishlist>
   deleteWishlist: (id: string) => Promise<void>
   renameWishlist: (id: string, name: string) => Promise<void>
@@ -42,15 +47,45 @@ interface WishlistState {
 
 export const useWishlistStore = create<WishlistState>((set, get) => ({
   wishlists: [],
+  blacklist: [],
 
   loadWishlists: async () => {
     const stored = await getWishlists()
     _localWishlists = stored.filter(w => !w.isShared)
     const sharedStored = stored.filter(w => w.isShared)
     sharedStored.forEach(w => _sharedWishlists.set(w.id, w))
-    set({ wishlists: _merged() })
+    _blacklist = await getBlacklist()
+    set({ wishlists: _merged(), blacklist: _blacklist })
     // Re-subscribe to all shared wishlists
     sharedStored.forEach(w => get().subscribeToSharedWishlist(w.id))
+  },
+
+  addToBlacklist: async (place) => {
+    const already = _blacklist.some(b =>
+      place.googlePlaceId ? b.googlePlaceId === place.googlePlaceId : b.name === place.name
+    )
+    if (already) return
+    const item: WishlistItem = {
+      id: generateId(),
+      googlePlaceId: place.googlePlaceId,
+      name: place.name,
+      category: place.category,
+      lat: place.lat,
+      lng: place.lng,
+      address: place.address,
+      photo: place.photo,
+      rating: place.rating,
+      addedAt: new Date().toISOString(),
+    }
+    _blacklist.push(item)
+    set({ blacklist: [..._blacklist] })
+    await saveBlacklist(_blacklist)
+  },
+
+  removeFromBlacklist: async (id) => {
+    _blacklist = _blacklist.filter(b => b.id !== id)
+    set({ blacklist: [..._blacklist] })
+    await saveBlacklist(_blacklist)
   },
 
   createWishlist: async (name) => {

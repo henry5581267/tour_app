@@ -8,6 +8,7 @@ import { generateItinerary } from '../../../shared/api/aiItinerary'
 import { enrichWishlistForAI } from '../../../shared/api/enrichItineraryInput'
 import { GeneratedItinerary, TransportMode } from '../../../shared/types'
 import { useWishlistStore } from '../../wishlist/store'
+import { GenerateRequest } from '../../../shared/api/itineraryPrompt'
 
 interface Props {
   visible: boolean
@@ -25,7 +26,9 @@ const TRANSPORT_OPTIONS: { mode: TransportMode; label: string }[] = [
 export function AITripModal({ visible, onClose, onSuccess }: Props) {
   const { colors } = useTheme()
   const wishlists = useWishlistStore(s => s.wishlists)
+  const blacklist = useWishlistStore(s => s.blacklist)
   const [selectedWishlistId, setSelectedWishlistId] = useState<string | null>(null)
+  const [avoidBlacklist, setAvoidBlacklist] = useState(true)
   const [destination, setDestination] = useState('')
   const [days, setDays] = useState(3)
   const [preferences, setPreferences] = useState('')
@@ -48,6 +51,9 @@ export function AITripModal({ visible, onClose, onSuccess }: Props) {
         preferences,
         transportMode,
         wishlistPlaces,
+        blacklistPlaces: avoidBlacklist && blacklist.length > 0
+          ? blacklist.map(b => b.name)
+          : undefined,
       })
       setDestination('')
       setDays(3)
@@ -153,6 +159,18 @@ export function AITripModal({ visible, onClose, onSuccess }: Props) {
             </View>
           )}
 
+          {blacklist.length > 0 && (
+            <TouchableOpacity
+              style={[styles.blacklistRow, { borderColor: avoidBlacklist ? colors.danger + '88' : colors.border }]}
+              onPress={() => setAvoidBlacklist(v => !v)}
+              disabled={loading}
+            >
+              <Text style={[styles.blacklistText, { color: avoidBlacklist ? colors.danger : colors.textSecondary }]}>
+                {avoidBlacklist ? '🚫' : '○'} 避開黑名單（{blacklist.length} 個地點）
+              </Text>
+            </TouchableOpacity>
+          )}
+
           <View style={styles.btns}>
             <TouchableOpacity
               style={[styles.generateBtn, { backgroundColor: canSubmit ? colors.primary : colors.surfaceSecondary }]}
@@ -203,4 +221,6 @@ const styles = StyleSheet.create({
   transportRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   transportBtn: { borderWidth: 1.5, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 12 },
   transportText: { fontSize: 13, fontWeight: '600' },
+  blacklistRow: { marginTop: 16, borderWidth: 1.5, borderRadius: 10, padding: 12 },
+  blacklistText: { fontSize: 14, fontWeight: '600' },
 })

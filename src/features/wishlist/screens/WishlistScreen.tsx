@@ -130,6 +130,12 @@ export function WishlistScreen() {
           <Text style={[styles.importBtnText, { color: colors.text }]}>匯入 📥</Text>
         </TouchableOpacity>
         <TouchableOpacity
+          style={[styles.blacklistBtn, { borderColor: colors.danger + '88' }]}
+          onPress={() => navigation.navigate('Blacklist')}
+        >
+          <Text style={[styles.blacklistBtnText, { color: colors.danger }]}>🚫</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
           style={[styles.createBtn, { backgroundColor: colors.primary }]}
           onPress={() => setShowCreate(true)}
         >
@@ -212,6 +218,8 @@ const styles = StyleSheet.create({
   joinText: { fontSize: 14, fontWeight: '600' },
   importBtn: { flex: 1, borderRadius: 12, borderWidth: 1, paddingVertical: 13, alignItems: 'center' },
   importBtnText: { fontSize: 13, fontWeight: '600' },
+  blacklistBtn: { borderRadius: 12, borderWidth: 1, paddingVertical: 13, paddingHorizontal: 14, alignItems: 'center' },
+  blacklistBtnText: { fontSize: 16 },
   createBtn: { flex: 2, borderRadius: 12, paddingVertical: 13, alignItems: 'center' },
   createText: { color: '#fff', fontSize: 14, fontWeight: '700' },
   renameOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 32 },
