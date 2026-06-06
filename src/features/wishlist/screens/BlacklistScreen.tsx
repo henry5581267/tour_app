@@ -108,15 +108,14 @@ export function BlacklistScreen() {
           <TouchableOpacity
             style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onLongPress={() => handleRemove(item.id, item.name)}
+            delayLongPress={400}
+            activeOpacity={0.7}
           >
             <View style={styles.info}>
               <CategoryBadge category={item.category} />
               <Text style={[styles.name, { color: colors.text }]}>{item.name}</Text>
               <Text style={[styles.addr, { color: colors.textSecondary }]} numberOfLines={1}>{item.address}</Text>
             </View>
-            <TouchableOpacity onPress={() => handleRemove(item.id, item.name)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Text style={[styles.removeBtn, { color: colors.danger }]}>✕</Text>
-            </TouchableOpacity>
           </TouchableOpacity>
         )}
       />
@@ -153,7 +152,6 @@ const styles = StyleSheet.create({
   info: { flex: 1 },
   name: { fontSize: 14, fontWeight: '700', marginTop: 4 },
   addr: { fontSize: 12, marginTop: 2 },
-  removeBtn: { fontSize: 18, fontWeight: '700', paddingLeft: 8 },
   fab: {
     position: 'absolute', right: 24, bottom: 28,
     width: 54, height: 54, borderRadius: 27,
