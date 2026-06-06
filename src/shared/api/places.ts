@@ -60,8 +60,9 @@ export async function searchPlaces(
 
 export async function getPlaceDetails(
   placeId: string,
+  language: string = 'zh-TW',
 ): Promise<{ openingHours?: string }> {
-  const url = `${PLACES_BASE_URL}/details/json?place_id=${placeId}&fields=opening_hours&language=zh-TW&key=${GOOGLE_PLACES_API_KEY}`
+  const url = `${PLACES_BASE_URL}/details/json?place_id=${placeId}&fields=opening_hours&language=${language}&key=${GOOGLE_PLACES_API_KEY}`
   const res = await fetch(url)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const data: any = await res.json()

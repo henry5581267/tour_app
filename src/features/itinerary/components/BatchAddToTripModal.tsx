@@ -5,7 +5,7 @@ import {
 } from 'react-native'
 import { useTheme } from '../../../shared/theme/ThemeContext'
 import { useItineraryStore } from '../store'
-import { searchPlaces } from '../../../shared/api/places'
+import { searchPlaces, getPlaceDetails } from '../../../shared/api/places'
 import { Trip, TripPlace } from '../../../shared/types'
 
 interface Props {
@@ -41,6 +41,14 @@ export function BatchAddToTripModal({ visible, trip, onClose }: Props) {
         const results = await searchPlaces(q)
         if (results.length > 0) {
           const r = results[0]
+          // 查營業時間（英文格式，供優化路線解析公休/打烊時間）
+          let openingHours: string | undefined
+          if (r.googlePlaceId) {
+            try {
+              const d = await getPlaceDetails(r.googlePlaceId, 'en')
+              openingHours = d.openingHours
+            } catch {}
+          }
           const place: TripPlace = {
             id: '',
             googlePlaceId: r.googlePlaceId,
@@ -50,6 +58,7 @@ export function BatchAddToTripModal({ visible, trip, onClose }: Props) {
             lng: r.lng,
             address: r.address,
             photo: r.photo,
+            openingHours,
           }
           await addPlaceToTrip(trip.id, selectedDay, place)
           found++
