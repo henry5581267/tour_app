@@ -8,7 +8,6 @@ import { generateItinerary } from '../../../shared/api/aiItinerary'
 import { enrichWishlistForAI } from '../../../shared/api/enrichItineraryInput'
 import { GeneratedItinerary, TransportMode } from '../../../shared/types'
 import { useWishlistStore } from '../../wishlist/store'
-import { GenerateRequest } from '../../../shared/api/itineraryPrompt'
 
 interface Props {
   visible: boolean
@@ -30,8 +29,9 @@ export function AITripModal({ visible, onClose, onSuccess }: Props) {
   const [selectedWishlistId, setSelectedWishlistId] = useState<string | null>(null)
   const [avoidBlacklist, setAvoidBlacklist] = useState(true)
   const [destination, setDestination] = useState('')
+  const [startingPoint, setStartingPoint] = useState('')
   const [days, setDays] = useState(3)
-  const [preferences, setPreferences] = useState('')
+  const [preferences, setPreferences] = useState('請避開太吵鬧的遊樂園或純拍照的網美打卡點，交通希望以地鐵或步行 15 分鐘內能到的地方為主')
   const [transportMode, setTransportMode] = useState<TransportMode>('driving')
   const [loading, setLoading] = useState(false)
 
@@ -47,6 +47,7 @@ export function AITripModal({ visible, onClose, onSuccess }: Props) {
         : undefined
       const itinerary = await generateItinerary({
         destination: destination.trim(),
+        startingPoint: startingPoint.trim() || undefined,
         days,
         preferences,
         transportMode,
@@ -56,6 +57,7 @@ export function AITripModal({ visible, onClose, onSuccess }: Props) {
           : undefined,
       })
       setDestination('')
+      setStartingPoint('')
       setDays(3)
       setPreferences('')
       setTransportMode('driving')
@@ -80,6 +82,15 @@ export function AITripModal({ visible, onClose, onSuccess }: Props) {
             value={destination}
             onChangeText={setDestination}
             placeholder="例如：台中、京都、峇里島"
+            placeholderTextColor={colors.textTertiary}
+          />
+
+          <Text style={[styles.label, { color: colors.textSecondary }]}>出發地（選填，用於來回規劃）</Text>
+          <TextInput
+            style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surfaceSecondary }]}
+            value={startingPoint}
+            onChangeText={setStartingPoint}
+            placeholder="例如：新竹、台北，AI 會安排從此出發並回程"
             placeholderTextColor={colors.textTertiary}
           />
 

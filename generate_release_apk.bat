@@ -16,7 +16,7 @@ set APK_SRC=%ROOT%android\app\build\outputs\apk\release\app-release.apk
 set APK_NAME=tour_app-%GIT_HASH%.apk
 set APK_DST=%ROOT%release\%APK_NAME%
 
-echo [1/2] Building APK... (version: %GIT_HASH%)
+echo [1/3] Building APK... (version: %GIT_HASH%)
 cd "%ROOT%android"
 call gradlew.bat assembleRelease
 if errorlevel 1 (

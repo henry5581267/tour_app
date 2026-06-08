@@ -39,7 +39,6 @@ export function BlacklistScreen() {
     await addToBlacklist(place)
     setQuery('')
     setResults([])
-    setShowSearch(false)
     Alert.alert('已加入黑名單', `「${place.name}」加入黑名單，AI 規劃時可選擇避開`)
   }
 

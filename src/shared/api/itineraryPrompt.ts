@@ -16,6 +16,7 @@ export const ITINERARY_SYSTEM_PROMPT = `你是一個專業的繁體中文旅遊�
        - 若使用者偏好為「步行」或「騎自行車」：此跨縣市長途段一律強制使用 transit（大眾運輸），抵達當地後的後續地點再恢復步行或騎車。
    (c) 其餘狀況一律順從使用者原本選的主要交通方式偏好。
 7. 當某地點的 transport 為 "driving"（開車抵達）時，加上 parking 欄位，提供該地點附近實用的建議停車地點（例如「○○停車場」或「△△路邊停車格」）。其他交通方式或無建議時，parking 設為 null。
+8. 若使用者提供了起始／終點城市，第一天的第一個地點須從該城市出發（路線合理），最後一天的最後一個地點應安排在返回起始城市的路線上或鄰近地區，並在該地點的 note 加上「返回[起始城市]，建議預留約 XX 分鐘車程」的提示。
 
 回傳格式：
 {
@@ -52,6 +53,7 @@ export interface GenerateRequest {
   destination: string
   days: number
   preferences: string
+  startingPoint?: string
   transportMode?: TransportMode
   // 每個元素為一個收藏景點的描述（含地址、評分、營業時間、附近推薦等）
   wishlistPlaces?: string[]
@@ -61,6 +63,10 @@ export interface GenerateRequest {
 
 export function buildUserPrompt(params: GenerateRequest): string {
   let userPrompt = `目的地：${params.destination}\n天數：${params.days} 天\n偏好：${params.preferences || '無特別偏好'}`
+
+  if (params.startingPoint) {
+    userPrompt += `\n起始／終點城市：${params.startingPoint}。行程從此地出發，最後一天結束時須安排返回此地，並在最後一個地點的 note 提示預估返程時間。`
+  }
 
   if (params.transportMode) {
     userPrompt += `\n主要交通方式：${TRANSPORT_LABEL[params.transportMode]}。請依此安排地點間的距離與順序，避免在此交通方式下移動過於困難或耗時的路線。`
