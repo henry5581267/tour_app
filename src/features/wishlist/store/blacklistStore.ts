@@ -111,8 +111,8 @@ export const useBlacklistStore = create<BlacklistState>((set, get) => ({
       if (!exists) merged.push(local)
     }
     const deviceId = await getDeviceId()
-    await updateSharedBlacklist(result.id, merged)
     await addBlacklistMember(result.id, deviceId)
+    await updateSharedBlacklist(result.id, merged)
     _items = merged
     await saveBlacklist(_items)
     await saveBlacklistMeta({ isShared: true, firestoreId: result.id })
@@ -143,6 +143,12 @@ export const useBlacklistStore = create<BlacklistState>((set, get) => ({
 function _startSubscription(firestoreId: string) {
   _stopSubscription()
   _unsub = subscribeToBlacklist(firestoreId, (items) => {
+    if (items === null) {
+      _stopSubscription()
+      saveBlacklistMeta({ isShared: false })
+      useBlacklistStore.setState({ isShared: false, firestoreId: undefined, inviteCode: undefined })
+      return
+    }
     _items = items
     useBlacklistStore.setState({ items: [..._items] })
     saveBlacklist(_items)

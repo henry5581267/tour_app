@@ -94,13 +94,16 @@ export async function deleteBlacklist(
 
 export function subscribeToBlacklist(
   blacklistId: string,
-  onUpdate: (items: WishlistItem[]) => void,
+  onUpdate: (items: WishlistItem[] | null) => void,
 ): () => void {
   return firestore()
     .collection(BLACKLISTS)
     .doc(blacklistId)
     .onSnapshot(snap => {
-      if (!snap.exists) return
+      if (!snap.exists) {
+        onUpdate(null)
+        return
+      }
       const data = (snap as any).data() as { items: WishlistItem[] }
       onUpdate(data.items ?? [])
     })
