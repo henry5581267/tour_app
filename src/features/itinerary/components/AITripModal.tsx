@@ -8,6 +8,7 @@ import { generateItinerary } from '../../../shared/api/aiItinerary'
 import { enrichWishlistForAI } from '../../../shared/api/enrichItineraryInput'
 import { GeneratedItinerary, TransportMode } from '../../../shared/types'
 import { useWishlistStore } from '../../wishlist/store'
+import { useBlacklistStore } from '../../wishlist/store/blacklistStore'
 
 interface Props {
   visible: boolean
@@ -25,7 +26,7 @@ const TRANSPORT_OPTIONS: { mode: TransportMode; label: string }[] = [
 export function AITripModal({ visible, onClose, onSuccess }: Props) {
   const { colors } = useTheme()
   const wishlists = useWishlistStore(s => s.wishlists)
-  const blacklist = useWishlistStore(s => s.blacklist)
+  const blacklist = useBlacklistStore(s => s.items)
   const [selectedWishlistId, setSelectedWishlistId] = useState<string | null>(null)
   const [avoidBlacklist, setAvoidBlacklist] = useState(true)
   const [destination, setDestination] = useState('')
